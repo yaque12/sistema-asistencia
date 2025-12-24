@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Configurar el middleware de autenticación
+        // Cuando un usuario no autenticado intenta acceder a una ruta protegida,
+        // será redirigido automáticamente a la ruta 'login'
+        $middleware->redirectGuestsTo('/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
