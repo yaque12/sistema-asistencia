@@ -31,11 +31,11 @@ $content = file_get_contents($envFile);
 // Configuraciones a aplicar
 $configs = [
     'DB_CONNECTION' => 'mysql',
-    'DB_HOST' => '127.0.0.1',
+    'DB_HOST' => 'localhost',
     'DB_PORT' => '3306',
     'DB_DATABASE' => 'sistema_asistencia',
     'DB_USERNAME' => 'root',
-    'DB_PASSWORD' => '',
+    'DB_PASSWORD' => 'root',
 ];
 
 echo "Configurando variables de base de datos...\n\n";
@@ -86,5 +86,6 @@ echo "1. Ejecuta: php artisan config:clear\n";
 echo "2. Reinicia el servidor: php artisan serve\n";
 echo "3. Intenta iniciar sesión nuevamente\n";
 echo "========================================\n";
+
 
 

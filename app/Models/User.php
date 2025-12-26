@@ -35,6 +35,16 @@ class User extends Authenticatable
      * Por defecto Laravel usa 'id', pero nosotros usamos 'id_usuario'
      */
     protected $primaryKey = 'id_usuario';
+    
+    /**
+     * Indica si los IDs son auto-incrementales
+     */
+    public $incrementing = true;
+    
+    /**
+     * El tipo de dato de la clave primaria
+     */
+    protected $keyType = 'int';
 
     /**
      * Los campos que se pueden llenar masivamente
@@ -84,14 +94,15 @@ class User extends Authenticatable
     }
 
     /**
-     * Obtener el nombre del campo de usuario para autenticación
-     * Laravel por defecto usa 'email', pero nosotros usamos 'nombre_usuario'
+     * Obtener el identificador único del usuario para la sesión
+     * Laravel usa este valor para guardar en la sesión
+     * Debe devolver el ID del usuario (id_usuario)
      * 
-     * @return string
+     * @return mixed
      */
-    public function getAuthIdentifierName()
+    public function getAuthIdentifier()
     {
-        return 'nombre_usuario';
+        return $this->id_usuario;
     }
 
     /**

@@ -87,28 +87,34 @@ class AuthController extends Controller
         // Buscamos al usuario por nombre de usuario
         $usuario = User::where('nombre_usuario', $request->nombre_usuario)->first();
 
-        // Verificar si el usuario existe y la contraseña es correcta
-        if ($usuario && Hash::check($request->clave, $usuario->clave)) {
-            // PASO 5: Si el login es exitoso
-            
-            // Iniciar sesión manualmente
-            Auth::login($usuario);
-            
-            // Regenerar la sesión para prevenir ataques de fijación de sesión
-            $request->session()->regenerate();
-
-            // Mensaje de éxito
-            session()->flash('success', '¡Bienvenido al sistema!');
-
-            // Redirigir a la página de bienvenida
-            return redirect()->intended('/bienvenida');
+        // Verificar si el usuario existe
+        if (!$usuario) {
+            return back()->withErrors([
+                'nombre_usuario' => 'El usuario no existe.',
+            ])->withInput($request->only('nombre_usuario'));
         }
+        
+        // Verificar si la contraseña es correcta
+        if (!Hash::check($request->clave, $usuario->clave)) {
+            return back()->withErrors([
+                'nombre_usuario' => 'La contraseña es incorrecta.',
+            ])->withInput($request->only('nombre_usuario'));
+        }
+        
+        // PASO 5: Si el login es exitoso
+        
+        // Iniciar sesión usando el objeto usuario completo
+        // El segundo parámetro 'false' significa que NO recordar la sesión
+        Auth::login($usuario, false);
+        
+        // Guardar la sesión explícitamente
+        $request->session()->save();
 
-        // PASO 6: Si el login falla
-        // Regresar al formulario con un mensaje de error
-        return back()->withErrors([
-            'nombre_usuario' => 'Las credenciales proporcionadas no son correctas.',
-        ])->withInput($request->only('nombre_usuario'));
+        // Mensaje de éxito
+        session()->flash('success', '¡Bienvenido al sistema!');
+
+        // Redirigir a la página de bienvenida
+        return redirect('/bienvenida');
     }
 
     /**
