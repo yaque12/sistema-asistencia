@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'Sistema de Asistencia')</title>
+    
+    <!-- Tailwind CSS -->
+    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <!-- Fallback: Tailwind CSS desde CDN (solo para desarrollo) -->
+        <script src="https://cdn.tailwindcss.com"></script>
+    @endif
+</head>
+<body class="bg-gray-100 min-h-screen">
+    
+    <!-- Sidebar fijo a la izquierda -->
+    <aside class="fixed left-0 top-0 h-full w-64 bg-blue-600 text-white shadow-lg z-30">
+        <div class="flex flex-col h-full">
+            <!-- Logo/Título del Sidebar -->
+            <div class="p-6 border-b border-blue-500">
+                <h1 class="text-xl font-bold">Sistema de Asistencia</h1>
+            </div>
+            
+            <!-- Opciones de navegación -->
+            <nav class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <!-- Opción: Usuarios -->
+                    <li>
+                        <a href="#" class="block px-4 py-3 rounded-lg bg-blue-700 hover:bg-blue-800 transition duration-200 cursor-not-allowed opacity-75" onclick="return false;">
+                            <span class="font-semibold">Usuarios</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Opción: Empleados -->
+                    <li>
+                        <a href="#" class="block px-4 py-3 rounded-lg bg-blue-700 hover:bg-blue-800 transition duration-200 cursor-not-allowed opacity-75" onclick="return false;">
+                            <span class="font-semibold">Empleados</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Opción: Razones de ausentismos -->
+                    <li>
+                        <a href="#" class="block px-4 py-3 rounded-lg bg-blue-700 hover:bg-blue-800 transition duration-200 cursor-not-allowed opacity-75" onclick="return false;">
+                            <span class="font-semibold">Razones de ausentismos</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+    
+    <!-- Contenedor principal con margen izquierdo para el sidebar -->
+    <div class="ml-64 min-h-screen flex flex-col">
+        
+        <!-- Barra de navegación superior -->
+        <nav class="bg-blue-600 text-white shadow-lg">
+            <div class="px-6 py-4">
+                <div class="flex items-center justify-end">
+                    <!-- Botón de cerrar sesión -->
+                    <form method="POST" action="/logout" class="inline">
+                        @csrf
+                        <button 
+                            type="submit" 
+                            class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded transition duration-200"
+                        >
+                            Cerrar Sesión
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Contenido principal -->
+        <main class="flex-1 px-6 py-8">
+            @yield('content')
+        </main>
+        
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white">
+            <div class="px-6 py-4">
+                <div class="text-center">
+                    <p class="text-sm">
+                        Sistema de Asistencia © {{ date('Y') }} - Todos los derechos reservados
+                    </p>
+                </div>
+            </div>
+        </footer>
+        
+    </div>
+    
+</body>
+</html>
+
