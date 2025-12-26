@@ -55,3 +55,33 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/bienvenida', [AuthController::class, 'bienvenida'])
     ->middleware('auth')
     ->name('bienvenida');
+
+// Módulo de Gestión de Usuarios (protegida)
+// URL: http://localhost/usuarios
+// Solo accesible si el usuario está autenticado
+Route::get('/usuarios', function () {
+    // Datos mock para el frontend
+    $usuariosMock = collect([
+        (object)[
+            'id_usuario' => 1,
+            'nombre_usuario' => 'jperez',
+            'nombres' => 'Juan',
+            'apellidos' => 'Pérez',
+            'departamento_trabajo' => 'Recursos Humanos',
+            'codigo_empleado' => 'EMP001',
+            'created_at' => now()->subDays(30),
+        ],
+        (object)[
+            'id_usuario' => 2,
+            'nombre_usuario' => 'mgarcia',
+            'nombres' => 'María',
+            'apellidos' => 'García',
+            'departamento_trabajo' => 'Contabilidad',
+            'codigo_empleado' => 'EMP002',
+            'created_at' => now()->subDays(25),
+        ],
+        
+    ]);
+    
+    return view('usuarios.index', ['usuarios' => $usuariosMock]);
+})->middleware('auth')->name('usuarios.index');

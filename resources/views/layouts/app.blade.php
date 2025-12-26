@@ -28,7 +28,7 @@
                 <ul class="space-y-2">
                     <!-- Opción: Usuarios -->
                     <li>
-                        <a href="#" class="block px-4 py-3 rounded-lg bg-blue-700 hover:bg-blue-800 transition duration-200 cursor-not-allowed opacity-75" onclick="return false;">
+                        <a href="{{ route('usuarios.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('usuarios.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
                             <span class="font-semibold">Usuarios</span>
                         </a>
                     </li>
@@ -90,6 +90,7 @@
         
     </div>
     
+    @stack('scripts')
 </body>
 </html>
 
