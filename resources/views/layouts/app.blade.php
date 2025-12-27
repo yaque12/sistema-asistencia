@@ -21,7 +21,9 @@
         <div class="flex flex-col h-full">
             <!-- Logo/Título del Sidebar -->
             <div class="p-6 border-b border-blue-500">
-                <h1 class="text-xl font-bold">Sistema de Asistencia</h1>
+                <a href="{{ route('bienvenida') }}" class="block">
+                    <h1 class="text-xl font-bold hover:text-blue-200 transition duration-200 cursor-pointer">Sistema de Asistencia</h1>
+                </a>
             </div>
             
             <!-- Opciones de navegación -->
