@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UsuarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,32 +57,32 @@ Route::get('/bienvenida', [AuthController::class, 'bienvenida'])
     ->middleware('auth')
     ->name('bienvenida');
 
-// Módulo de Gestión de Usuarios (protegida)
-// URL: http://localhost/usuarios
-// Solo accesible si el usuario está autenticado
-Route::get('/usuarios', function () {
-    // Datos mock para el frontend
-    $usuariosMock = collect([
-        (object)[
-            'id_usuario' => 1,
-            'nombre_usuario' => 'jperez',
-            'nombres' => 'Juan',
-            'apellidos' => 'Pérez',
-            'departamento_trabajo' => 'Recursos Humanos',
-            'codigo_empleado' => 'EMP001',
-            'created_at' => now()->subDays(30),
-        ],
-        (object)[
-            'id_usuario' => 2,
-            'nombre_usuario' => 'mgarcia',
-            'nombres' => 'María',
-            'apellidos' => 'García',
-            'departamento_trabajo' => 'Contabilidad',
-            'codigo_empleado' => 'EMP002',
-            'created_at' => now()->subDays(25),
-        ],
-        
-    ]);
-    
-    return view('usuarios.index', ['usuarios' => $usuariosMock]);
-})->middleware('auth')->name('usuarios.index');
+/*
+||--------------------------------------------------------------------------
+|| Módulo de Gestión de Usuarios
+||--------------------------------------------------------------------------
+||
+|| Rutas para gestionar usuarios del sistema.
+|| Todas las rutas requieren autenticación.
+||
+*/
+
+// Mostrar la vista de usuarios (GET)
+Route::get('/usuarios', [UsuarioController::class, 'index'])
+    ->middleware('auth')
+    ->name('usuarios.index');
+
+// Crear nuevo usuario (POST)
+Route::post('/usuarios', [UsuarioController::class, 'store'])
+    ->middleware('auth')
+    ->name('usuarios.store');
+
+// Actualizar usuario existente (PUT)
+Route::put('/usuarios/{usuario}', [UsuarioController::class, 'update'])
+    ->middleware('auth')
+    ->name('usuarios.update');
+
+// Eliminar usuario (DELETE)
+Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('usuarios.destroy');

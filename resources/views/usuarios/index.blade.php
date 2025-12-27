@@ -16,6 +16,9 @@
         <p class="text-gray-600 mt-2">Administra los usuarios del sistema</p>
     </div>
 
+    <!-- Contenedor para mensajes globales -->
+    <div id="mensaje-global" class="hidden mb-6 p-4 rounded-lg"></div>
+
     <!-- Barra de búsqueda y acciones -->
     <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
         <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -111,7 +114,7 @@
         <!-- Paginación -->
         <div id="paginacion-usuarios" class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
             <div class="text-sm text-gray-700">
-                Mostrando <span id="mostrando-desde">1</span> a <span id="mostrando-hasta">10</span> de <span id="total-usuarios">{{ count($usuarios) }}</span> usuarios
+                Mostrando <span id="mostrando-desde">{{ $usuarios->firstItem() ?? 0 }}</span> a <span id="mostrando-hasta">{{ $usuarios->lastItem() ?? 0 }}</span> de <span id="total-usuarios">{{ $usuarios->total() }}</span> usuarios
             </div>
             <div class="flex gap-2">
                 <button id="btn-pagina-anterior" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
@@ -131,10 +134,7 @@
     @include('usuarios.partials.modal-crear')
     @include('usuarios.partials.modal-editar')
 
-    <!-- Datos mock para JavaScript -->
-    <script type="application/json" id="usuarios-data">
-        @json($usuarios)
-    </script>
+    <!-- Datos iniciales para JavaScript (opcional, ya que se cargan desde el servidor) -->
 
 @endsection
 
