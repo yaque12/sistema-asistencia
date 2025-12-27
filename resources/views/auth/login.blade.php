@@ -108,11 +108,10 @@
                 <!-- Información adicional -->
                 <div class="mt-6 p-4 bg-gray-50 rounded-lg">
                     <p class="text-xs text-gray-600 text-center">
-                        <strong>Nota:</strong> Si es la primera vez que accedes al sistema, 
-                        se creará automáticamente un usuario supervisor con las credenciales:
+                        <strong>Nota:</strong> contacte al admin para ingresar al sistema
                         <br>
-                        <span class="font-mono text-blue-600">usuario: supervisor</span> / 
-                        <span class="font-mono text-blue-600">contraseña: supervisor</span>
+                        <span class="font-mono text-blue-600">usuario</span> / 
+                        <span class="font-mono text-blue-600">contraseña</span>
                     </p>
                 </div>
                 

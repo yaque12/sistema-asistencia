@@ -86,3 +86,20 @@ Route::put('/usuarios/{usuario}', [UsuarioController::class, 'update'])
 Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'destroy'])
     ->middleware('auth')
     ->name('usuarios.destroy');
+
+/*
+|||--------------------------------------------------------------------------
+||| Módulo de Gestión de Empleados (Solo Frontend)
+|||--------------------------------------------------------------------------
+|||
+||| Ruta para mostrar la vista de empleados.
+||| La funcionalidad se maneja completamente en el frontend.
+|||
+*/
+
+// Mostrar la vista de empleados (GET)
+Route::get('/empleados', function () {
+    return view('empleados.index');
+})
+    ->middleware('auth')
+    ->name('empleados.index');

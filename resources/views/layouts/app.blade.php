@@ -36,7 +36,7 @@
                     
                     <!-- Opción: Empleados -->
                     <li>
-                        <a href="#" class="block px-4 py-3 rounded-lg bg-blue-700 hover:bg-blue-800 transition duration-200 cursor-not-allowed opacity-75" onclick="return false;">
+                        <a href="{{ route('empleados.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('empleados.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
                             <span class="font-semibold">Empleados</span>
                         </a>
                     </li>
