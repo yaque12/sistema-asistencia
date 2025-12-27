@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\EmpleadoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -98,8 +99,21 @@ Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'destroy'])
 */
 
 // Mostrar la vista de empleados (GET)
-Route::get('/empleados', function () {
-    return view('empleados.index');
-})
+Route::get('/empleados', [EmpleadoController::class, 'index'])
     ->middleware('auth')
     ->name('empleados.index');
+
+// Crear nuevo empleado (POST)
+Route::post('/empleados', [EmpleadoController::class, 'store'])
+    ->middleware('auth')
+    ->name('empleados.store');
+
+// Actualizar empleado existente (PUT)
+Route::put('/empleados/{empleado}', [EmpleadoController::class, 'update'])
+    ->middleware('auth')
+    ->name('empleados.update');
+
+// Eliminar empleado (DELETE)
+Route::delete('/empleados/{empleado}', [EmpleadoController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('empleados.destroy');

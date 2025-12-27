@@ -5,7 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
+use App\Models\Empleado;
 use App\Policies\UsuarioPolicy;
+use App\Policies\EmpleadoPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected $policies = [
         User::class => UsuarioPolicy::class,
+        Empleado::class => EmpleadoPolicy::class,
     ];
 
     /**

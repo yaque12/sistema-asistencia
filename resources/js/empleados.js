@@ -6,36 +6,32 @@ let paginaActual = 1;
 let terminoBusqueda = '';
 let timeoutBusqueda = null;
 const empleadosPorPagina = 15;
-let idContador = 1; // Contador para generar IDs únicos
 
-// Datos mockeados de empleados
-let empleados = [
-    {
-        id: idContador++,
-        nombres: 'Juan',
-        apellidos: 'Pérez',
-        departamento: 'Recursos Humanos',
-        codigo_empleado: 'EMP001',
-        fecha_ingreso: '2020-01-15'
-    },
-    {
-        id: idContador++,
-        nombres: 'María',
-        apellidos: 'González',
-        departamento: 'Ventas',
-        codigo_empleado: 'EMP002',
-        fecha_ingreso: '2020-03-20'
-    },
-    {
-        id: idContador++,
-        nombres: 'Carlos',
-        apellidos: 'Rodríguez',
-        departamento: 'Tecnología',
-        codigo_empleado: 'EMP003',
-        fecha_ingreso: '2021-06-10'
+// Obtener token CSRF del meta tag
+function getCsrfToken() {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    return token ? token.getAttribute('content') : '';
+}
+
+// Configurar fetch para incluir CSRF y headers necesarios
+function fetchConfig(method, body = null) {
+    const config = {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': getCsrfToken(),
+        },
+        credentials: 'same-origin',
+    };
+    
+    if (body) {
+        config.body = JSON.stringify(body);
     }
     
-];
+    return config;
+}
 
 // Inicialización cuando el DOM está listo
 document.addEventListener('DOMContentLoaded', function() {
@@ -44,9 +40,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /**
- * Carga los datos iniciales
+ * Carga los datos iniciales desde el servidor
  */
 function inicializarDatos() {
+    // Cargar empleados iniciales desde el servidor
     cargarEmpleados();
 }
 
@@ -139,49 +136,36 @@ function inicializarEventListeners() {
 }
 
 /**
- * Carga y muestra los empleados en la tabla
+ * Carga los empleados desde el servidor
  */
-function cargarEmpleados() {
-    // Filtrar empleados según el término de búsqueda
-    let empleadosFiltrados = empleados;
-    
-    if (terminoBusqueda.trim() !== '') {
-        const busqueda = terminoBusqueda.toLowerCase();
-        empleadosFiltrados = empleados.filter(empleado => {
-            const nombres = (empleado.nombres || '').toLowerCase();
-            const apellidos = (empleado.apellidos || '').toLowerCase();
-            const departamento = (empleado.departamento || '').toLowerCase();
-            const codigo = (empleado.codigo_empleado || '').toLowerCase();
-            
-            return nombres.includes(busqueda) || 
-                   apellidos.includes(busqueda) || 
-                   departamento.includes(busqueda) || 
-                   codigo.includes(busqueda);
+async function cargarEmpleados() {
+    try {
+        mostrarLoading(true);
+        
+        const url = new URL('/empleados', window.location.origin);
+        url.searchParams.append('buscar', terminoBusqueda);
+        url.searchParams.append('pagina', paginaActual);
+        url.searchParams.append('por_pagina', empleadosPorPagina);
+
+        const response = await fetch(url.toString(), {
+            ...fetchConfig('GET'),
+            body: null,
         });
+
+        const data = await response.json();
+
+        if (data.success) {
+            actualizarTabla(data.data.empleados);
+            actualizarPaginacion(data.data.paginacion);
+        } else {
+            manejarErrorRespuesta(response, data);
+        }
+    } catch (error) {
+        console.error('Error al cargar empleados:', error);
+        mostrarMensajeGlobal('error', 'Error al cargar los empleados. Por favor, intenta nuevamente.');
+    } finally {
+        mostrarLoading(false);
     }
-
-    // Calcular paginación
-    const total = empleadosFiltrados.length;
-    const ultimaPagina = Math.ceil(total / empleadosPorPagina) || 1;
-    const desde = total > 0 ? ((paginaActual - 1) * empleadosPorPagina) + 1 : 0;
-    const hasta = Math.min(paginaActual * empleadosPorPagina, total);
-
-    // Obtener empleados de la página actual
-    const inicio = (paginaActual - 1) * empleadosPorPagina;
-    const fin = inicio + empleadosPorPagina;
-    const empleadosPagina = empleadosFiltrados.slice(inicio, fin);
-
-    // Actualizar tabla
-    actualizarTabla(empleadosPagina);
-
-    // Actualizar paginación
-    actualizarPaginacion({
-        pagina_actual: paginaActual,
-        ultima_pagina: ultimaPagina,
-        total: total,
-        desde: desde,
-        hasta: hasta
-    });
 }
 
 /**
@@ -212,21 +196,20 @@ function cerrarModalCrearEmpleado() {
  * Abre el modal para editar un empleado
  */
 function abrirModalEditar(empleadoId, boton) {
-    // Buscar el empleado en el array
-    const empleado = empleados.find(emp => emp.id === empleadoId);
-    
-    if (!empleado) {
-        mostrarMensajeGlobal('error', 'Empleado no encontrado.');
-        return;
-    }
+    // Obtener datos del empleado desde los atributos del botón
+    const nombres = boton.getAttribute('data-nombres');
+    const apellidos = boton.getAttribute('data-apellidos');
+    const departamento = boton.getAttribute('data-departamento');
+    const codigoEmpleado = boton.getAttribute('data-codigo-empleado');
+    const fechaIngreso = boton.getAttribute('data-fecha-ingreso');
 
     // Llenar el formulario
-    document.getElementById('editar-id-empleado').value = empleado.id;
-    document.getElementById('editar-nombres').value = empleado.nombres || '';
-    document.getElementById('editar-apellidos').value = empleado.apellidos || '';
-    document.getElementById('editar-departamento').value = empleado.departamento || '';
-    document.getElementById('editar-codigo-empleado').value = empleado.codigo_empleado || '';
-    document.getElementById('editar-fecha-ingreso').value = empleado.fecha_ingreso || '';
+    document.getElementById('editar-id-empleado').value = empleadoId;
+    document.getElementById('editar-nombres').value = nombres || '';
+    document.getElementById('editar-apellidos').value = apellidos || '';
+    document.getElementById('editar-departamento').value = departamento || '';
+    document.getElementById('editar-codigo-empleado').value = codigoEmpleado || '';
+    document.getElementById('editar-fecha-ingreso').value = fechaIngreso || '';
 
     // Ocultar mensajes de error
     limpiarErroresEditar();
@@ -297,7 +280,7 @@ function limpiarErroresEditar() {
 /**
  * Maneja el envío del formulario de crear empleado
  */
-function manejarCrearEmpleado(e) {
+async function manejarCrearEmpleado(e) {
     e.preventDefault();
     
     limpiarErroresCrear();
@@ -325,32 +308,33 @@ function manejarCrearEmpleado(e) {
         return;
     }
 
-    // Crear nuevo empleado
-    const nuevoEmpleado = {
-        id: idContador++,
-        nombres: formData.nombres,
-        apellidos: formData.apellidos,
-        departamento: formData.departamento,
-        codigo_empleado: formData.codigo_empleado,
-        fecha_ingreso: formData.fecha_ingreso
-    };
+    try {
+        mostrarLoadingFormulario('form-crear-empleado', true);
 
-    // Agregar al array
-    empleados.push(nuevoEmpleado);
+        const response = await fetch('/empleados', fetchConfig('POST', formData));
+        const data = await response.json();
 
-    // Mostrar mensaje de éxito
-    mostrarMensajeGlobal('success', 'Empleado creado exitosamente.');
-    
-    // Cerrar modal y recargar lista
-    cerrarModalCrearEmpleado();
-    paginaActual = 1; // Volver a la primera página
-    cargarEmpleados();
+        if (data.success) {
+            mostrarMensajeGlobal('success', data.message || 'Empleado creado exitosamente.');
+            cerrarModalCrearEmpleado();
+            paginaActual = 1; // Volver a la primera página
+            cargarEmpleados(); // Recargar la lista
+        } else {
+            manejarErroresValidacion(data.errors, 'crear-');
+            mostrarMensaje('error', data.message || 'Error al crear el empleado.', 'mensaje-crear');
+        }
+    } catch (error) {
+        console.error('Error al crear empleado:', error);
+        mostrarMensajeGlobal('error', 'Error al crear el empleado. Por favor, intenta nuevamente.');
+    } finally {
+        mostrarLoadingFormulario('form-crear-empleado', false);
+    }
 }
 
 /**
  * Maneja el envío del formulario de editar empleado
  */
-function manejarEditarEmpleado(e) {
+async function manejarEditarEmpleado(e) {
     e.preventDefault();
     
     limpiarErroresEditar();
@@ -379,89 +363,56 @@ function manejarEditarEmpleado(e) {
         return;
     }
 
-    // Buscar y actualizar empleado
-    const indice = empleados.findIndex(emp => emp.id === idEmpleado);
-    
-    if (indice === -1) {
-        mostrarMensajeGlobal('error', 'Empleado no encontrado.');
-        return;
+    try {
+        mostrarLoadingFormulario('form-editar-empleado', true);
+
+        const response = await fetch(`/empleados/${idEmpleado}`, fetchConfig('PUT', formData));
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarMensajeGlobal('success', data.message || 'Empleado actualizado exitosamente.');
+            cerrarModalEditarEmpleado();
+            cargarEmpleados(); // Recargar la lista
+        } else {
+            manejarErroresValidacion(data.errors, 'editar-');
+            mostrarMensaje('error', data.message || 'Error al actualizar el empleado.', 'mensaje-editar');
+        }
+    } catch (error) {
+        console.error('Error al actualizar empleado:', error);
+        mostrarMensajeGlobal('error', 'Error al actualizar el empleado. Por favor, intenta nuevamente.');
+    } finally {
+        mostrarLoadingFormulario('form-editar-empleado', false);
     }
-
-    // Actualizar datos
-    empleados[indice] = {
-        ...empleados[indice],
-        nombres: formData.nombres,
-        apellidos: formData.apellidos,
-        departamento: formData.departamento,
-        codigo_empleado: formData.codigo_empleado,
-        fecha_ingreso: formData.fecha_ingreso
-    };
-
-    // Mostrar mensaje de éxito
-    mostrarMensajeGlobal('success', 'Empleado actualizado exitosamente.');
-    
-    // Cerrar modal y recargar lista
-    cerrarModalEditarEmpleado();
-    cargarEmpleados();
 }
 
 /**
  * Confirma y elimina un empleado
  */
-function confirmarEliminar(empleadoId, nombres, apellidos) {
+async function confirmarEliminar(empleadoId, nombres, apellidos) {
     const nombreCompleto = `${nombres} ${apellidos}`.trim();
     
     if (!confirm(`¿Está seguro de que desea eliminar al empleado "${nombreCompleto}"?\n\nEsta acción no se puede deshacer.`)) {
         return;
     }
 
-    // Buscar y eliminar empleado
-    const indice = empleados.findIndex(emp => emp.id === empleadoId);
-    
-    if (indice === -1) {
-        mostrarMensajeGlobal('error', 'Empleado no encontrado.');
-        return;
+    try {
+        mostrarLoading(true);
+
+        const response = await fetch(`/empleados/${empleadoId}`, fetchConfig('DELETE'));
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarMensajeGlobal('success', data.message || 'Empleado eliminado exitosamente.');
+            cargarEmpleados(); // Recargar la lista
+        } else {
+            manejarErrorRespuesta(response, data);
+        }
+    } catch (error) {
+        console.error('Error al eliminar empleado:', error);
+        mostrarMensajeGlobal('error', 'Error al eliminar el empleado. Por favor, intenta nuevamente.');
+    } finally {
+        mostrarLoading(false);
     }
-
-    // Eliminar del array
-    empleados.splice(indice, 1);
-
-    // Ajustar página si es necesario
-    const empleadosFiltrados = obtenerEmpleadosFiltrados();
-    const total = empleadosFiltrados.length;
-    const ultimaPagina = Math.ceil(total / empleadosPorPagina) || 1;
-    
-    if (paginaActual > ultimaPagina && ultimaPagina > 0) {
-        paginaActual = ultimaPagina;
-    }
-
-    // Mostrar mensaje de éxito
-    mostrarMensajeGlobal('success', 'Empleado eliminado exitosamente.');
-    
-    // Recargar lista
-    cargarEmpleados();
-}
-
-/**
- * Obtiene los empleados filtrados según el término de búsqueda
- */
-function obtenerEmpleadosFiltrados() {
-    if (terminoBusqueda.trim() === '') {
-        return empleados;
-    }
-
-    const busqueda = terminoBusqueda.toLowerCase();
-    return empleados.filter(empleado => {
-        const nombres = (empleado.nombres || '').toLowerCase();
-        const apellidos = (empleado.apellidos || '').toLowerCase();
-        const departamento = (empleado.departamento || '').toLowerCase();
-        const codigo = (empleado.codigo_empleado || '').toLowerCase();
-        
-        return nombres.includes(busqueda) || 
-               apellidos.includes(busqueda) || 
-               departamento.includes(busqueda) || 
-               codigo.includes(busqueda);
-    });
 }
 
 /**
@@ -501,8 +452,8 @@ function actualizarTabla(empleadosPagina) {
             : 'N/A';
         
         return `
-            <tr class="empleado-fila hover:bg-gray-50" data-empleado-id="${empleado.id}">
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${empleado.id}</td>
+            <tr class="empleado-fila hover:bg-gray-50" data-empleado-id="${empleado.id_empleado}">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${empleado.id_empleado}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${empleado.nombres || ''}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${empleado.apellidos || ''}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${empleado.departamento || 'No especificado'}</td>
@@ -511,7 +462,7 @@ function actualizarTabla(empleadosPagina) {
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button 
                         class="btn-editar text-blue-600 hover:text-blue-900 mr-3" 
-                        data-empleado-id="${empleado.id}"
+                        data-empleado-id="${empleado.id_empleado}"
                         data-nombres="${empleado.nombres || ''}"
                         data-apellidos="${empleado.apellidos || ''}"
                         data-departamento="${empleado.departamento || ''}"
@@ -522,7 +473,7 @@ function actualizarTabla(empleadosPagina) {
                     </button>
                     <button 
                         class="btn-eliminar text-red-600 hover:text-red-900" 
-                        data-empleado-id="${empleado.id}"
+                        data-empleado-id="${empleado.id_empleado}"
                         data-nombres="${empleado.nombres || ''}"
                         data-apellidos="${empleado.apellidos || ''}"
                     >
@@ -640,6 +591,40 @@ function mostrarError(idError, mensaje) {
 }
 
 /**
+ * Maneja los errores de validación del servidor
+ */
+function manejarErroresValidacion(errors, prefijo) {
+    if (!errors) return;
+
+    for (const [campo, mensajes] of Object.entries(errors)) {
+        const errorId = `error-${prefijo}${campo}`;
+        const mensaje = Array.isArray(mensajes) ? mensajes[0] : mensajes;
+        mostrarError(errorId, mensaje);
+    }
+}
+
+/**
+ * Maneja errores de respuesta HTTP
+ */
+function manejarErrorRespuesta(response, data) {
+    if (response.status === 401) {
+        mostrarMensajeGlobal('error', 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.');
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 2000);
+    } else if (response.status === 403) {
+        mostrarMensajeGlobal('error', data.message || 'No tienes permisos para realizar esta acción.');
+    } else if (response.status === 422) {
+        // Errores de validación ya manejados en las funciones específicas
+        mostrarMensajeGlobal('error', data.message || 'Los datos proporcionados no son válidos.');
+    } else if (response.status === 500) {
+        mostrarMensajeGlobal('error', 'Ocurrió un error en el servidor. Por favor, intenta nuevamente más tarde.');
+    } else {
+        mostrarMensajeGlobal('error', data.message || 'Ocurrió un error. Por favor, intenta nuevamente.');
+    }
+}
+
+/**
  * Muestra un mensaje global en la parte superior
  */
 function mostrarMensajeGlobal(tipo, mensaje) {
@@ -686,3 +671,38 @@ function ocultarMensaje(contenedorId) {
     }
 }
 
+/**
+ * Muestra/oculta el estado de carga general
+ */
+function mostrarLoading(mostrar) {
+    // Puedes agregar un spinner o indicador visual aquí
+    const tabla = document.getElementById('tabla-empleados-body');
+    if (tabla && mostrar) {
+        tabla.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Cargando...</td></tr>';
+    }
+}
+
+/**
+ * Muestra/oculta el estado de carga en un formulario
+ */
+function mostrarLoadingFormulario(formId, mostrar) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+
+    const botones = form.querySelectorAll('button[type="submit"]');
+    botones.forEach(boton => {
+        boton.disabled = mostrar;
+        if (mostrar) {
+            boton.dataset.originalText = boton.textContent;
+            boton.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span>Procesando...';
+        } else {
+            boton.textContent = boton.dataset.originalText || boton.textContent;
+        }
+    });
+
+    // Deshabilitar todos los inputs
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.disabled = mostrar;
+    });
+}
