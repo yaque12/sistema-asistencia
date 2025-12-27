@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\EmpleadoController;
+use App\Http\Controllers\RazonAusentismoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -117,3 +118,33 @@ Route::put('/empleados/{empleado}', [EmpleadoController::class, 'update'])
 Route::delete('/empleados/{empleado}', [EmpleadoController::class, 'destroy'])
     ->middleware('auth')
     ->name('empleados.destroy');
+
+/*
+|--------------------------------------------------------------------------
+| Módulo de Gestión de Razones de Ausentismos
+|--------------------------------------------------------------------------
+|
+| Rutas para gestionar razones de ausentismos del sistema.
+| Todas las rutas requieren autenticación.
+|
+*/
+
+// Mostrar la vista de razones de ausentismos (GET)
+Route::get('/razones-ausentismos', [RazonAusentismoController::class, 'index'])
+    ->middleware('auth')
+    ->name('razones-ausentismos.index');
+
+// Crear nueva razón de ausentismo (POST)
+Route::post('/razones-ausentismos', [RazonAusentismoController::class, 'store'])
+    ->middleware('auth')
+    ->name('razones-ausentismos.store');
+
+// Actualizar razón de ausentismo existente (PUT)
+Route::put('/razones-ausentismos/{razonAusentismo}', [RazonAusentismoController::class, 'update'])
+    ->middleware('auth')
+    ->name('razones-ausentismos.update');
+
+// Eliminar razón de ausentismo (DELETE)
+Route::delete('/razones-ausentismos/{razonAusentismo}', [RazonAusentismoController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('razones-ausentismos.destroy');

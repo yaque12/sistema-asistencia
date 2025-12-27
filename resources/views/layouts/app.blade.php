@@ -45,7 +45,7 @@
                     
                     <!-- Opción: Razones de ausentismos -->
                     <li>
-                        <a href="#" class="block px-4 py-3 rounded-lg bg-blue-700 hover:bg-blue-800 transition duration-200 cursor-not-allowed opacity-75" onclick="return false;">
+                        <a href="{{ route('razones-ausentismos.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('razones-ausentismos.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
                             <span class="font-semibold">Razones de ausentismos</span>
                         </a>
                     </li>
