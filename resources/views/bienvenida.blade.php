@@ -26,7 +26,7 @@
     <!-- Nombre de la empresa -->
     <div class="text-center mb-6">
         <h2 class="text-5xl font-extrabold text-green-800">
-            DECHOTO.COM
+            mauricio yaque
         </h2>
     </div>
     

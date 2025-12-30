@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Gate;
 use App\Models\User;
 use App\Models\Empleado;
 use App\Models\RazonAusentismo;
+use App\Models\ReporteDiario;
 use App\Policies\UsuarioPolicy;
 use App\Policies\EmpleadoPolicy;
 use App\Policies\RazonAusentismoPolicy;
+use App\Policies\ReporteDiarioPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         User::class => UsuarioPolicy::class,
         Empleado::class => EmpleadoPolicy::class,
         RazonAusentismo::class => RazonAusentismoPolicy::class,
+        ReporteDiario::class => ReporteDiarioPolicy::class,
     ];
 
     /**

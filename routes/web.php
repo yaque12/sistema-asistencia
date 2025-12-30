@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\RazonAusentismoController;
+use App\Http\Controllers\ReporteDiarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -148,3 +149,38 @@ Route::put('/razones-ausentismos/{razonAusentismo}', [RazonAusentismoController:
 Route::delete('/razones-ausentismos/{razonAusentismo}', [RazonAusentismoController::class, 'destroy'])
     ->middleware('auth')
     ->name('razones-ausentismos.destroy');
+
+/*
+||--------------------------------------------------------------------------
+|| Módulo de Reporte Diario
+||--------------------------------------------------------------------------
+||
+|| Rutas para gestionar reportes diarios de asistencia.
+|| Todas las rutas requieren autenticación.
+||
+*/
+
+// Mostrar la vista de reporte diario (GET)
+Route::get('/reporte-diario', [ReporteDiarioController::class, 'index'])
+    ->middleware('auth')
+    ->name('reporte-diario.index');
+
+// Guardar múltiples reportes diarios (guardado masivo) (POST)
+Route::post('/reporte-diario/guardar-masivo', [ReporteDiarioController::class, 'guardarMasivo'])
+    ->middleware('auth')
+    ->name('reporte-diario.guardar-masivo');
+
+// Crear nuevo reporte diario (POST)
+Route::post('/reporte-diario', [ReporteDiarioController::class, 'store'])
+    ->middleware('auth')
+    ->name('reporte-diario.store');
+
+// Actualizar reporte diario existente (PUT)
+Route::put('/reporte-diario/{reporteDiario}', [ReporteDiarioController::class, 'update'])
+    ->middleware('auth')
+    ->name('reporte-diario.update');
+
+// Eliminar reporte diario (DELETE)
+Route::delete('/reporte-diario/{reporteDiario}', [ReporteDiarioController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('reporte-diario.destroy');

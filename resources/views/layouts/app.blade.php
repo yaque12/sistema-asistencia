@@ -49,6 +49,13 @@
                             <span class="font-semibold">Razones de ausentismos</span>
                         </a>
                     </li>
+                    
+                    <!-- Opción: Reporte Diario -->
+                    <li>
+                        <a href="{{ route('reporte-diario.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('reporte-diario.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
+                            <span class="font-semibold">Reporte Diario</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </div>
