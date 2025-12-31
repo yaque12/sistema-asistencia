@@ -447,9 +447,25 @@ function actualizarTabla(empleadosPagina) {
 
     // Generar filas de la tabla
     tbody.innerHTML = empleadosPagina.map(empleado => {
-        const fecha = empleado.fecha_ingreso 
-            ? new Date(empleado.fecha_ingreso + 'T00:00:00').toLocaleDateString('es-ES')
-            : 'N/A';
+        let fecha = 'N/A';
+        if (empleado.fecha_ingreso) {
+            try {
+                // Si la fecha ya incluye hora (formato ISO completo), usar directamente
+                // Si solo es fecha (YYYY-MM-DD), agregar hora
+                const fechaStr = empleado.fecha_ingreso.includes('T') 
+                    ? empleado.fecha_ingreso 
+                    : empleado.fecha_ingreso + 'T00:00:00';
+                const fechaObj = new Date(fechaStr);
+                
+                // Validar que la fecha sea válida
+                if (!isNaN(fechaObj.getTime())) {
+                    fecha = fechaObj.toLocaleDateString('es-ES');
+                }
+            } catch (error) {
+                console.error('Error al formatear fecha:', error);
+                fecha = 'N/A';
+            }
+        }
         
         return `
             <tr class="empleado-fila hover:bg-gray-50" data-empleado-id="${empleado.id_empleado}">

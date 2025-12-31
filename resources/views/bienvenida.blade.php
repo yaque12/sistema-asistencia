@@ -4,13 +4,6 @@
 
 @section('content')
     
-    <!-- Mensajes de éxito -->
-    @if(session('success'))
-        <div class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-            <p>{{ session('success') }}</p>
-        </div>
-    @endif
-    
     <!-- Tarjeta de bienvenida -->
     <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-8">
@@ -26,7 +19,7 @@
     <!-- Nombre de la empresa -->
     <div class="text-center mb-6">
         <h2 class="text-5xl font-extrabold text-green-800">
-            mauricio yaque
+            DECHOTO.COM
         </h2>
     </div>
     
@@ -129,7 +122,7 @@
             
             <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p class="text-sm text-blue-800">
-                    <strong>Nota:</strong> Estos botones son solo ejemplos. 
+                    <strong>Nota:</strong> Estos botones son solo ejemplos aun no se que agregar. 
                     Puedes agregar más funcionalidades según las necesidades de tu sistema.
                 </p>
             </div>

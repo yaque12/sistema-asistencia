@@ -6,6 +6,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\RazonAusentismoController;
 use App\Http\Controllers\ReporteDiarioController;
+use App\Http\Controllers\ConsultaDescargaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -184,3 +185,28 @@ Route::put('/reporte-diario/{reporteDiario}', [ReporteDiarioController::class, '
 Route::delete('/reporte-diario/{reporteDiario}', [ReporteDiarioController::class, 'destroy'])
     ->middleware('auth')
     ->name('reporte-diario.destroy');
+
+/*
+|--------------------------------------------------------------------------
+| Módulo de Consultas y Descargas
+|--------------------------------------------------------------------------
+|
+| Rutas para consultas y descargas de reportes.
+| Todas las rutas requieren autenticación.
+|
+*/
+
+// Mostrar la vista de consultas y descargas (GET)
+Route::get('/consultas-descargas', [ConsultaDescargaController::class, 'index'])
+    ->middleware('auth')
+    ->name('consultas-descargas.index');
+
+// Consultar reportes con filtros (POST)
+Route::post('/consultas-descargas/consultar', [ConsultaDescargaController::class, 'consultar'])
+    ->middleware('auth')
+    ->name('consultas-descargas.consultar');
+
+// Descargar reportes en Excel (GET)
+Route::get('/consultas-descargas/descargar', [ConsultaDescargaController::class, 'descargar'])
+    ->middleware('auth')
+    ->name('consultas-descargas.descargar');
