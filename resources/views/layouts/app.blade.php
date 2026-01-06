@@ -74,17 +74,31 @@
         <!-- Barra de navegación superior -->
         <nav class="bg-blue-600 text-white shadow-lg">
             <div class="px-6 py-4">
-                <div class="flex items-center justify-end">
-                    <!-- Botón de cerrar sesión -->
-                    <form method="POST" action="/logout" class="inline">
-                        @csrf
-                        <button 
-                            type="submit" 
-                            class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded transition duration-200"
+                <div class="flex items-center justify-between">
+                    <!-- Espaciador izquierdo -->
+                    <div class="flex-1"></div>
+                    
+                    <!-- Logo centrado -->
+                    <div class="flex-1 flex justify-center">
+                        <img 
+                            src="{{ asset('images/logo.jpg') }}" 
+                            alt="Logo de la Empresa" 
+                            class="h-12 w-auto object-contain"
                         >
-                            Cerrar Sesión
-                        </button>
-                    </form>
+                    </div>
+                    
+                    <!-- Botón de cerrar sesión -->
+                    <div class="flex-1 flex justify-end">
+                        <form method="POST" action="/logout" class="inline">
+                            @csrf
+                            <button 
+                                type="submit" 
+                                class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded transition duration-200"
+                            >
+                                Cerrar Sesión
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </nav>

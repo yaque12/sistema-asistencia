@@ -123,7 +123,7 @@
             <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p class="text-sm text-blue-800">
                     <strong>Nota:</strong> Estos botones son solo ejemplos aun no se que agregar. 
-                    Puedes agregar más funcionalidades según las necesidades de tu sistema.
+                    Puedes agregar más funcionalidades según las necesidades del sistema.
                 </p>
             </div>
         </div>

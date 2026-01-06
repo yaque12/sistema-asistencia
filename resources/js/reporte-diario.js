@@ -9,7 +9,7 @@ let empleadosFiltrados = []; // Empleados filtrados por departamento
 let razonesAusentismos = [];
 let reporteDiario = {
     fecha: null,
-    registros: [] // Array de objetos con {empleado_id, horas_trabajadas, horas_ausentes, razon_id, comentarios}
+    registros: [] // Array de objetos con {id_empleado, horas_trabajadas, horas_ausentes, id_razon, comentarios}
 };
 
 // Obtener token CSRF del meta tag
@@ -282,10 +282,10 @@ async function cargarReportePorFecha() {
         if (data.success && data.data && data.data.reportes) {
             // Cargar los datos del reporte en el objeto reporteDiario
             reporteDiario.registros = data.data.reportes.map(reporte => ({
-                empleado_id: reporte.id_empleado,
+                id_empleado: reporte.id_empleado,
                 horas_trabajadas: reporte.horas_trabajadas,
                 horas_ausentes: reporte.horas_ausentes,
-                razon_id: reporte.id_razon,
+                id_razon: reporte.id_razon,
                 comentarios: reporte.comentarios
             }));
         } else {
@@ -359,11 +359,11 @@ function mostrarTablaEmpleados() {
     // Generar filas de la tabla
     tbody.innerHTML = empleadosOrdenados.map(empleado => {
         // Buscar si hay datos guardados para este empleado
-        const registro = reporteDiario.registros.find(r => r.empleado_id === empleado.id_empleado);
+        const registro = reporteDiario.registros.find(r => r.id_empleado === empleado.id_empleado);
         
         const horasTrabajadas = registro ? registro.horas_trabajadas || '' : '';
         const horasAusentes = registro ? registro.horas_ausentes || '' : '';
-        const razonId = registro ? registro.razon_id || '' : '';
+        const razonId = registro ? registro.id_razon || '' : '';
         const comentarios = registro ? registro.comentarios || '' : '';
         
         // Generar opciones del select de razones
@@ -466,7 +466,7 @@ function agregarEventListenersInputs() {
         select.addEventListener('change', function() {
             const empleadoId = parseInt(this.getAttribute('data-empleado-id'));
             const valor = this.value ? parseInt(this.value) : null;
-            actualizarRegistro(empleadoId, 'razon_id', valor);
+            actualizarRegistro(empleadoId, 'id_razon', valor);
         });
     });
 
@@ -484,14 +484,14 @@ function agregarEventListenersInputs() {
  * Actualiza un registro en el objeto reporteDiario
  */
 function actualizarRegistro(empleadoId, campo, valor) {
-    let registro = reporteDiario.registros.find(r => r.empleado_id === empleadoId);
+    let registro = reporteDiario.registros.find(r => r.id_empleado === empleadoId);
     
     if (!registro) {
         registro = {
-            empleado_id: empleadoId,
+            id_empleado: empleadoId,
             horas_trabajadas: null,
             horas_ausentes: null,
-            razon_id: null,
+            id_razon: null,
             comentarios: null
         };
         reporteDiario.registros.push(registro);
@@ -522,7 +522,7 @@ function eliminarFila(empleadoId) {
     }
 
     // Remover del array de registros
-    reporteDiario.registros = reporteDiario.registros.filter(r => r.empleado_id !== empleadoId);
+    reporteDiario.registros = reporteDiario.registros.filter(r => r.id_empleado !== empleadoId);
     
     // Recargar la tabla para limpiar los campos
     mostrarTablaEmpleados();
@@ -544,23 +544,44 @@ async function guardarReporte() {
         return;
     }
 
-    // Validar que haya al menos algún dato ingresado
-    const hayDatos = reporteDiario.registros.some(registro => 
-        registro.horas_trabajadas !== null || 
-        registro.horas_ausentes !== null || 
-        registro.razon_id !== null || 
-        (registro.comentarios && registro.comentarios.trim() !== '')
-    );
+    // Filtrar y preparar solo los registros que tienen datos
+    const registrosConDatos = reporteDiario.registros.filter(registro => {
+        // Asegurar que tenga id_empleado
+        if (!registro.id_empleado) {
+            return false;
+        }
+        
+        // Verificar que tenga al menos un dato
+        return registro.horas_trabajadas !== null && registro.horas_trabajadas !== '' ||
+               registro.horas_ausentes !== null && registro.horas_ausentes !== '' ||
+               registro.id_razon !== null ||
+               (registro.comentarios && registro.comentarios.trim() !== '');
+    });
 
-    if (!hayDatos) {
+    if (registrosConDatos.length === 0) {
         mostrarMensajeGlobal('error', 'Por favor, ingrese al menos un dato antes de guardar.');
         return;
     }
 
+    // Preparar los datos para enviar, asegurando que todos tengan id_empleado
+    const datosParaEnviar = {
+        fecha: fechaSeleccionada,
+        registros: registrosConDatos.map(registro => ({
+            id_empleado: parseInt(registro.id_empleado),
+            horas_trabajadas: registro.horas_trabajadas !== null && registro.horas_trabajadas !== '' 
+                ? parseFloat(registro.horas_trabajadas) : null,
+            horas_ausentes: registro.horas_ausentes !== null && registro.horas_ausentes !== '' 
+                ? parseFloat(registro.horas_ausentes) : null,
+            id_razon: registro.id_razon ? parseInt(registro.id_razon) : null,
+            comentarios: registro.comentarios && registro.comentarios.trim() !== '' 
+                ? registro.comentarios.trim() : null
+        }))
+    };
+
     try {
         mostrarLoadingBoton(true);
 
-        const response = await fetch('/reporte-diario/guardar-masivo', fetchConfig('POST', reporteDiario));
+        const response = await fetch('/reporte-diario/guardar-masivo', fetchConfig('POST', datosParaEnviar));
         const data = await response.json();
 
         if (data.success) {
@@ -569,7 +590,22 @@ async function guardarReporte() {
             // Recargar los datos para reflejar los cambios
             await cargarReportePorFecha();
         } else {
-            mostrarMensajeGlobal('error', data.message || 'Error al guardar el reporte.');
+            // Manejar errores de validación
+            if (response.status === 422 && data.errors) {
+                // Construir mensaje con todos los errores
+                const mensajesError = [];
+                for (const campo in data.errors) {
+                    if (data.errors.hasOwnProperty(campo)) {
+                        mensajesError.push(...data.errors[campo]);
+                    }
+                }
+                const mensajeCompleto = mensajesError.length > 0 
+                    ? mensajesError.join(' ') 
+                    : data.message || 'Los datos proporcionados no son válidos.';
+                mostrarMensajeGlobal('error', mensajeCompleto);
+            } else {
+                mostrarMensajeGlobal('error', data.message || 'Error al guardar el reporte.');
+            }
         }
     } catch (error) {
         console.error('Error al guardar reporte:', error);

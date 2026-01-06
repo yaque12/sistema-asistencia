@@ -24,6 +24,13 @@
             <!-- Encabezado -->
             <div class="bg-blue-600 text-white p-6 text-center">
                 <h1 class="text-2xl font-bold">Sistema de Asistencia</h1>
+                <div class="mt-4 flex justify-center">
+                    <img 
+                        src="{{ asset('images/logo.jpg') }}" 
+                        alt="Logo de la Empresa" 
+                        class="h-20 w-auto object-contain"
+                    >
+                </div>
                 <p class="text-blue-100 mt-2">Iniciar Sesión</p>
             </div>
             
