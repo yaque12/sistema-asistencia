@@ -100,12 +100,23 @@ async function manejarCambioFecha(e) {
     try {
         mostrarLoading(true);
         
-        // Cargar empleados, razones y reporte existente en paralelo
+        // Cargar empleados y razones en paralelo
         await Promise.all([
             cargarEmpleados(),
-            cargarRazonesAusentismos(),
-            cargarReportePorFecha()
+            cargarRazonesAusentismos()
         ]);
+        
+        // Cargar reporte por fecha (puede retornar false si la fecha no está generada)
+        const puedeMostrarTabla = await cargarReportePorFecha();
+        
+        // Si la fecha no está generada, limpiar la tabla y mostrar mensaje
+        if (!puedeMostrarTabla) {
+            const tbody = document.getElementById('tabla-empleados-body');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-500">La fecha no está generada</td></tr>';
+            }
+            return;
+        }
         
         // Poblar el selector de departamentos
         poblarSelectorDepartamentos();
@@ -279,6 +290,13 @@ async function cargarReportePorFecha() {
 
         const data = await response.json();
 
+        // Si la fecha no está generada, mostrar mensaje y limpiar datos
+        if (!data.success && data.message === 'La fecha no está generada') {
+            reporteDiario.registros = [];
+            mostrarMensajeGlobal('error', data.message);
+            return false; // Indicar que no se debe mostrar la tabla
+        }
+
         if (data.success && data.data && data.data.reportes) {
             // Cargar los datos del reporte en el objeto reporteDiario
             reporteDiario.registros = data.data.reportes.map(reporte => ({
@@ -288,13 +306,16 @@ async function cargarReportePorFecha() {
                 id_razon: reporte.id_razon,
                 comentarios: reporte.comentarios
             }));
+            return true; // Indicar que se puede mostrar la tabla
         } else {
             // Si no hay reporte, limpiar registros
             reporteDiario.registros = [];
+            return true; // Indicar que se puede mostrar la tabla (aunque esté vacía)
         }
     } catch (error) {
         console.error('Error al cargar reporte por fecha:', error);
         reporteDiario.registros = [];
+        return true; // En caso de error, permitir mostrar la tabla
     }
 }
 

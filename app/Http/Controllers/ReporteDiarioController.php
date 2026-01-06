@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ReporteDiario;
+use App\Models\Reporte;
 use App\Http\Requests\StoreReporteDiarioRequest;
 use App\Http\Requests\UpdateReporteDiarioRequest;
 use Illuminate\Http\Request;
@@ -47,6 +48,20 @@ class ReporteDiarioController extends Controller
                     'success' => false,
                     'message' => 'La fecha es requerida.',
                 ], 400);
+            }
+
+            // Verificar si existe un reporte generado para esta fecha
+            $reporteGenerado = Reporte::where('fecha', $fecha)->first();
+
+            // Si no existe el reporte o está inactivo, retornar mensaje
+            if (!$reporteGenerado || $reporteGenerado->estado !== 'activo') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La fecha no está generada',
+                    'data' => [
+                        'reportes' => [],
+                    ],
+                ]);
             }
 
             // Construir consulta con joins para obtener información del empleado
