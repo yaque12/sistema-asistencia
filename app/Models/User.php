@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Role;
 
 /**
  * Modelo de Usuario
@@ -117,5 +118,86 @@ class User extends Authenticatable
             // Removido el cast 'hashed' porque puede causar conflictos
             // La encriptación se manejará manualmente en el controlador
         ];
+    }
+
+    /**
+     * Relación muchos a muchos con roles
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function roles()
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'usuario_roles',
+            'id_usuario',
+            'id_rol'
+        )->withTimestamps();
+    }
+
+    /**
+     * Verificar si el usuario tiene un rol específico
+     * 
+     * @param string $codigoRol El código del rol a verificar
+     * @return bool
+     */
+    public function tieneRol(string $codigoRol): bool
+    {
+        try {
+            return $this->roles()->where('codigo_rol', $codigoRol)->exists();
+        } catch (\Exception $e) {
+            // Si las tablas no existen aún, retornar false
+            return false;
+        }
+    }
+
+    /**
+     * Verificar si el usuario tiene alguno de los roles especificados
+     * 
+     * @param array<string> $codigosRoles Array de códigos de roles
+     * @return bool
+     */
+    public function tieneAlgunRol(array $codigosRoles): bool
+    {
+        try {
+            return $this->roles()->whereIn('codigo_rol', $codigosRoles)->exists();
+        } catch (\Exception $e) {
+            // Si las tablas no existen aún, retornar false
+            return false;
+        }
+    }
+
+    /**
+     * Verificar si el usuario tiene todos los roles especificados
+     * 
+     * @param array<string> $codigosRoles Array de códigos de roles
+     * @return bool
+     */
+    public function tieneTodosLosRoles(array $codigosRoles): bool
+    {
+        try {
+            $rolesUsuario = $this->roles()->whereIn('codigo_rol', $codigosRoles)->pluck('codigo_rol')->toArray();
+            return count($codigosRoles) === count($rolesUsuario) && 
+                   count(array_diff($codigosRoles, $rolesUsuario)) === 0;
+        } catch (\Exception $e) {
+            // Si las tablas no existen aún, retornar false
+            return false;
+        }
+    }
+
+    /**
+     * Verificar si el usuario es ADMIN o supervisor
+     * Estos roles tienen acceso completo al sistema
+     * 
+     * @return bool
+     */
+    public function esAdminOSupervisor(): bool
+    {
+        try {
+            return $this->tieneAlgunRol(['ADMIN', 'supervisor']);
+        } catch (\Exception $e) {
+            // Si las tablas no existen aún, retornar false
+            return false;
+        }
     }
 }

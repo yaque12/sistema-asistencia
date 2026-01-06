@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Role;
 use App\Http\Requests\StoreUsuarioRequest;
 use App\Http\Requests\UpdateUsuarioRequest;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class UsuarioController extends Controller
         $porPagina = $request->get('por_pagina', 15);
 
         // Construir la consulta
-        $query = User::query();
+        $query = User::with('roles');
 
         // Aplicar búsqueda si se proporciona
         if (!empty($busqueda)) {
@@ -62,6 +63,12 @@ class UsuarioController extends Controller
         // Si es una petición AJAX, retornar JSON
         if ($request->expectsJson() || $request->ajax()) {
             $usuarios = $query->paginate($porPagina, ['*'], 'pagina', $pagina);
+            
+            // Cargar roles para cada usuario
+            $usuarios->getCollection()->transform(function ($usuario) {
+                $usuario->roles_nombres = $usuario->roles->pluck('nombre_rol')->toArray();
+                return $usuario;
+            });
             
             return response()->json([
                 'success' => true,
@@ -114,6 +121,15 @@ class UsuarioController extends Controller
                 'clave' => Hash::make($request->clave), // Encriptar contraseña
             ]);
 
+            // Sincronizar roles si se proporcionan
+            if ($request->has('roles') && is_array($request->roles)) {
+                $rolesIds = Role::whereIn('codigo_rol', $request->roles)->pluck('id_rol')->toArray();
+                $usuario->roles()->sync($rolesIds);
+            }
+
+            // Cargar roles para la respuesta
+            $usuario->load('roles');
+
             // Retornar respuesta JSON con el usuario creado
             return response()->json([
                 'success' => true,
@@ -164,6 +180,15 @@ class UsuarioController extends Controller
             }
 
             $usuario->save();
+
+            // Sincronizar roles si se proporcionan
+            if ($request->has('roles') && is_array($request->roles)) {
+                $rolesIds = Role::whereIn('codigo_rol', $request->roles)->pluck('id_rol')->toArray();
+                $usuario->roles()->sync($rolesIds);
+            }
+
+            // Cargar roles para la respuesta
+            $usuario->load('roles');
 
             // Retornar respuesta JSON con el usuario actualizado
             return response()->json([
@@ -220,6 +245,34 @@ class UsuarioController extends Controller
                 'message' => 'Ocurrió un error al eliminar el usuario. Por favor, intenta nuevamente.',
             ], 500);
         }
+    }
+
+    /**
+     * Obtener un usuario con sus roles (para edición)
+     * 
+     * @param User $usuario
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show(User $usuario)
+    {
+        // Verificar autorización
+        if (!Gate::allows('viewAny', User::class)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para ver este usuario.',
+            ], 403);
+        }
+
+        // Cargar roles del usuario
+        $usuario->load('roles');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'usuario' => $usuario->makeHidden(['clave']),
+                'roles' => $usuario->roles->pluck('codigo_rol')->toArray(),
+            ],
+        ]);
     }
 }
 

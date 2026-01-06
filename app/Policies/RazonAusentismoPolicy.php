@@ -16,31 +16,33 @@ class RazonAusentismoPolicy
     /**
      * Determinar si el usuario puede ver la lista de razones de ausentismos
      * 
+     * ADMIN, supervisor y gerenciacontable01 pueden ver razones de ausentismos
+     * 
      * @param User $user El usuario autenticado
      * @return bool
      */
     public function viewAny(User $user): bool
     {
-        // Por ahora, todos los usuarios autenticados pueden ver la lista
-        // Se puede modificar para agregar restricciones según roles o permisos
-        return true;
+        return $user->esAdminOSupervisor() || $user->tieneRol('gerenciacontable01');
     }
 
     /**
      * Determinar si el usuario puede crear nuevas razones de ausentismos
+     * 
+     * ADMIN, supervisor y gerenciacontable01 pueden crear razones de ausentismos
      * 
      * @param User $user El usuario autenticado
      * @return bool
      */
     public function create(User $user): bool
     {
-        // Por ahora, todos los usuarios autenticados pueden crear razones de ausentismos
-        // Se puede modificar para agregar restricciones según roles o permisos
-        return true;
+        return $user->esAdminOSupervisor() || $user->tieneRol('gerenciacontable01');
     }
 
     /**
      * Determinar si el usuario puede actualizar una razón de ausentismo específica
+     * 
+     * ADMIN, supervisor y gerenciacontable01 pueden actualizar razones de ausentismos
      * 
      * @param User $user El usuario autenticado
      * @param RazonAusentismo $razonAusentismo La razón de ausentismo que se desea actualizar
@@ -48,13 +50,13 @@ class RazonAusentismoPolicy
      */
     public function update(User $user, RazonAusentismo $razonAusentismo): bool
     {
-        // Por ahora, todos los usuarios autenticados pueden actualizar cualquier razón de ausentismo
-        // Se puede modificar para agregar restricciones según roles o permisos
-        return true;
+        return $user->esAdminOSupervisor() || $user->tieneRol('gerenciacontable01');
     }
 
     /**
      * Determinar si el usuario puede eliminar una razón de ausentismo específica
+     * 
+     * ADMIN, supervisor y gerenciacontable01 pueden eliminar razones de ausentismos
      * 
      * @param User $user El usuario autenticado
      * @param RazonAusentismo $razonAusentismo La razón de ausentismo que se desea eliminar
@@ -62,9 +64,7 @@ class RazonAusentismoPolicy
      */
     public function delete(User $user, RazonAusentismo $razonAusentismo): bool
     {
-        // Por ahora, todos los usuarios autenticados pueden eliminar razones de ausentismos
-        // Se puede modificar para agregar restricciones según roles o permisos
-        return true;
+        return $user->esAdminOSupervisor() || $user->tieneRol('gerenciacontable01');
     }
 }
 

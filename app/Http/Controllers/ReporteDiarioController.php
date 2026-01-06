@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateReporteDiarioRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Controlador para la gestión de reportes diarios
@@ -96,8 +97,14 @@ class ReporteDiarioController extends Controller
             ]);
         }
 
-        // Para peticiones normales, retornar la vista
-        return view('reporte-diario.index');
+        // Para peticiones normales, retornar la vista con roles del usuario
+        $user = Auth::user();
+        $user->load('roles');
+        $rolesUsuario = $user->roles->pluck('codigo_rol')->toArray();
+        
+        return view('reporte-diario.index', [
+            'rolesUsuario' => $rolesUsuario,
+        ]);
     }
 
     /**
@@ -279,6 +286,8 @@ class ReporteDiarioController extends Controller
     /**
      * Eliminar un reporte diario
      * 
+     * RRHH.PLAN NO puede eliminar reportes diarios
+     * 
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
@@ -293,7 +302,15 @@ class ReporteDiarioController extends Controller
             ], 404);
         }
 
-        // Verificar autorización
+        // Verificar autorización - RRHH.PLAN no puede eliminar
+        $user = Auth::user();
+        if ($user->tieneRol('RRHH.PLAN')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para eliminar reportes diarios.',
+            ], 403);
+        }
+
         if (!Gate::allows('delete', $reporte)) {
             return response()->json([
                 'success' => false,

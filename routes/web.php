@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\RolController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\RazonAusentismoController;
 use App\Http\Controllers\ReporteDiarioController;
@@ -91,6 +92,16 @@ Route::put('/usuarios/{usuario}', [UsuarioController::class, 'update'])
 Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'destroy'])
     ->middleware('auth')
     ->name('usuarios.destroy');
+
+// Obtener usuario con roles (GET) - Para edición
+Route::get('/usuarios/{usuario}', [UsuarioController::class, 'show'])
+    ->middleware('auth')
+    ->name('usuarios.show');
+
+// Obtener roles disponibles (GET)
+Route::get('/roles', [RolController::class, 'index'])
+    ->middleware('auth')
+    ->name('roles.index');
 
 /*
 |||--------------------------------------------------------------------------

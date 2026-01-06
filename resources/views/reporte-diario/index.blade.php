@@ -111,6 +111,8 @@
         @endphp
         @if($jsContent)
             <script>
+                // Pasar roles del usuario a JavaScript
+                window.usuarioRoles = @json($rolesUsuario ?? []);
                 {!! $jsContent !!}
             </script>
         @endif

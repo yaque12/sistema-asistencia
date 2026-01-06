@@ -15,31 +15,33 @@ class UsuarioPolicy
     /**
      * Determinar si el usuario puede ver la lista de usuarios
      * 
+     * Solo ADMIN y supervisor pueden ver la lista de usuarios
+     * 
      * @param User $user El usuario autenticado
      * @return bool
      */
     public function viewAny(User $user): bool
     {
-        // Por ahora, todos los usuarios autenticados pueden ver la lista
-        // Se puede modificar para agregar restricciones según roles o permisos
-        return true;
+        return $user->esAdminOSupervisor();
     }
 
     /**
      * Determinar si el usuario puede crear nuevos usuarios
+     * 
+     * Solo ADMIN y supervisor pueden crear usuarios
      * 
      * @param User $user El usuario autenticado
      * @return bool
      */
     public function create(User $user): bool
     {
-        // Por ahora, todos los usuarios autenticados pueden crear usuarios
-        // Se puede modificar para agregar restricciones según roles o permisos
-        return true;
+        return $user->esAdminOSupervisor();
     }
 
     /**
      * Determinar si el usuario puede actualizar un usuario específico
+     * 
+     * Solo ADMIN y supervisor pueden actualizar usuarios
      * 
      * @param User $user El usuario autenticado
      * @param User $usuario El usuario que se desea actualizar
@@ -47,13 +49,14 @@ class UsuarioPolicy
      */
     public function update(User $user, User $usuario): bool
     {
-        // Por ahora, todos los usuarios autenticados pueden actualizar cualquier usuario
-        // Se puede modificar para agregar restricciones según roles o permisos
-        return true;
+        return $user->esAdminOSupervisor();
     }
 
     /**
      * Determinar si el usuario puede eliminar un usuario específico
+     * 
+     * Solo ADMIN y supervisor pueden eliminar usuarios
+     * Los usuarios no pueden eliminarse a sí mismos
      * 
      * @param User $user El usuario autenticado
      * @param User $usuario El usuario que se desea eliminar
@@ -66,9 +69,7 @@ class UsuarioPolicy
             return false;
         }
 
-        // Por ahora, todos los usuarios autenticados pueden eliminar otros usuarios
-        // Se puede modificar para agregar restricciones según roles o permisos
-        return true;
+        return $user->esAdminOSupervisor();
     }
 }
 

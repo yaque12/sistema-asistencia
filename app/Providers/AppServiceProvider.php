@@ -14,6 +14,7 @@ use App\Policies\EmpleadoPolicy;
 use App\Policies\RazonAusentismoPolicy;
 use App\Policies\ReporteDiarioPolicy;
 use App\Policies\ReportePolicy;
+use App\Policies\ConsultaDescargaPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {

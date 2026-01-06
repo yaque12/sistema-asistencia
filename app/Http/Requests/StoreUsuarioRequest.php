@@ -68,6 +68,14 @@ class StoreUsuarioRequest extends FormRequest
                 'string',
                 'same:clave',
             ],
+            'roles' => [
+                'nullable',
+                'array',
+            ],
+            'roles.*' => [
+                'string',
+                'exists:roles,codigo_rol',
+            ],
         ];
     }
 

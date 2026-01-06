@@ -6,6 +6,7 @@ let paginaActual = 1;
 let terminoBusqueda = '';
 let timeoutBusqueda = null;
 const usuariosPorPagina = 15;
+let rolesDisponibles = []; // Roles disponibles en el sistema
 
 // Obtener token CSRF del meta tag
 function getCsrfToken() {
@@ -43,6 +44,8 @@ document.addEventListener('DOMContentLoaded', function() {
  * Carga los datos iniciales desde el servidor
  */
 function inicializarDatos() {
+    // Cargar roles disponibles
+    cargarRoles();
     // Cargar usuarios iniciales desde el servidor
     cargarUsuarios();
 }
@@ -184,12 +187,78 @@ async function cargarUsuarios() {
 }
 
 /**
+ * Carga los roles disponibles desde el servidor
+ */
+async function cargarRoles() {
+    try {
+        const response = await fetch('/roles', {
+            ...fetchConfig('GET'),
+            body: null,
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.roles) {
+            rolesDisponibles = data.data.roles;
+        } else {
+            rolesDisponibles = [];
+            console.error('Error al cargar roles:', data.message);
+        }
+    } catch (error) {
+        console.error('Error al cargar roles:', error);
+        rolesDisponibles = [];
+    }
+}
+
+/**
+ * Renderiza los checkboxes de roles en el contenedor especificado
+ */
+function renderizarRoles(contenedorId, rolesSeleccionados = []) {
+    const contenedor = document.getElementById(contenedorId);
+    if (!contenedor) return;
+
+    if (rolesDisponibles.length === 0) {
+        contenedor.innerHTML = '<p class="text-gray-500 text-xs">No hay roles disponibles</p>';
+        return;
+    }
+
+    contenedor.innerHTML = rolesDisponibles.map(rol => {
+        const estaSeleccionado = rolesSeleccionados.includes(rol.codigo_rol);
+        return `
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <input 
+                    type="checkbox" 
+                    name="roles[]" 
+                    value="${rol.codigo_rol}" 
+                    class="rol-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    ${estaSeleccionado ? 'checked' : ''}
+                >
+                <span class="text-sm text-gray-700">${rol.nombre_rol}</span>
+                ${rol.descripcion ? `<span class="text-xs text-gray-500">(${rol.descripcion})</span>` : ''}
+            </label>
+        `;
+    }).join('');
+}
+
+/**
+ * Obtiene los roles seleccionados del formulario
+ */
+function obtenerRolesSeleccionados(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return [];
+
+    const checkboxes = form.querySelectorAll('input[name="roles[]"]:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+/**
  * Abre el modal para crear un nuevo usuario
  */
 function abrirModalCrear() {
     const modal = document.getElementById('modal-crear-usuario');
     if (modal) {
         limpiarFormularioCrear();
+        renderizarRoles('roles-crear-container', []);
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
@@ -210,7 +279,7 @@ function cerrarModalCrearUsuario() {
 /**
  * Abre el modal para editar un usuario
  */
-function abrirModalEditar(usuarioId, boton) {
+async function abrirModalEditar(usuarioId, boton) {
     // Obtener datos del usuario desde los atributos del botón
     const nombreUsuario = boton.getAttribute('data-nombre-usuario');
     const nombres = boton.getAttribute('data-nombres');
@@ -233,6 +302,24 @@ function abrirModalEditar(usuarioId, boton) {
     if (divConfirmarClave) {
         divConfirmarClave.classList.add('hidden');
         document.getElementById('editar-confirmar-clave').required = false;
+    }
+
+    // Cargar roles del usuario
+    try {
+        const response = await fetch(`/usuarios/${usuarioId}`, {
+            ...fetchConfig('GET'),
+            body: null,
+        });
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.roles) {
+            renderizarRoles('roles-editar-container', data.data.roles);
+        } else {
+            renderizarRoles('roles-editar-container', []);
+        }
+    } catch (error) {
+        console.error('Error al cargar roles del usuario:', error);
+        renderizarRoles('roles-editar-container', []);
     }
 
     // Ocultar mensajes de error
@@ -320,7 +407,8 @@ async function manejarCrearUsuario(e) {
         departamento_trabajo: document.getElementById('crear-departamento').value.trim() || null,
         codigo_empleado: document.getElementById('crear-codigo-empleado').value.trim() || null,
         clave: document.getElementById('crear-clave').value,
-        confirmar_clave: document.getElementById('crear-confirmar-clave').value
+        confirmar_clave: document.getElementById('crear-confirmar-clave').value,
+        roles: obtenerRolesSeleccionados('form-crear-usuario')
     };
 
     // Validación básica del frontend
@@ -371,6 +459,7 @@ async function manejarEditarUsuario(e) {
         apellidos: document.getElementById('editar-apellidos').value.trim(),
         departamento_trabajo: document.getElementById('editar-departamento').value.trim() || null,
         codigo_empleado: document.getElementById('editar-codigo-empleado').value.trim() || null,
+        roles: obtenerRolesSeleccionados('form-editar-usuario')
     };
 
     // Si se ingresó una nueva contraseña, agregarla
@@ -474,6 +563,10 @@ function actualizarTabla(usuarios) {
     // Generar filas de la tabla
     tbody.innerHTML = usuarios.map(usuario => {
         const fecha = usuario.created_at ? new Date(usuario.created_at).toLocaleDateString('es-ES') : 'N/A';
+        const rolesNombres = usuario.roles_nombres || [];
+        const rolesHtml = rolesNombres.length > 0 
+            ? rolesNombres.map(rol => `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1">${rol}</span>`).join('')
+            : '<span class="text-gray-400 text-xs">Sin roles</span>';
         
         return `
             <tr class="usuario-fila hover:bg-gray-50" data-usuario-id="${usuario.id_usuario}">
@@ -483,6 +576,7 @@ function actualizarTabla(usuarios) {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${usuario.apellidos || ''}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${usuario.departamento_trabajo || 'No especificado'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${usuario.codigo_empleado || 'No especificado'}</td>
+                <td class="px-6 py-4 text-sm text-gray-900">${rolesHtml}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${fecha}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button 

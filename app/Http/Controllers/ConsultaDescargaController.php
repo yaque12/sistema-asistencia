@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ReporteDiario;
 use App\Http\Requests\ConsultaDescargaRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Controlador para consultas y descargas
@@ -22,6 +23,11 @@ class ConsultaDescargaController extends Controller
      */
     public function index(Request $request)
     {
+        // Verificar autorización usando la Policy
+        if (!Gate::allows('viewAny', \App\Models\User::class)) {
+            abort(403, 'No tienes permisos para acceder a consultas y descargas.');
+        }
+
         return view('consultas-descargas.index');
     }
 
@@ -33,6 +39,16 @@ class ConsultaDescargaController extends Controller
      */
     public function consultar(ConsultaDescargaRequest $request)
     {
+        // Verificar autorización usando la Policy
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $policy = new \App\Policies\ConsultaDescargaPolicy();
+        if (!$policy->consultar($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para consultar reportes.',
+            ], 403);
+        }
+
         try {
             $fechaDesde = $request->fecha_desde;
             $fechaHasta = $request->fecha_hasta;
@@ -94,6 +110,13 @@ class ConsultaDescargaController extends Controller
      */
     public function descargar(Request $request)
     {
+        // Verificar autorización usando la Policy
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $policy = new \App\Policies\ConsultaDescargaPolicy();
+        if (!$policy->descargar($user)) {
+            abort(403, 'No tienes permisos para descargar reportes.');
+        }
+
         try {
             // Validar manualmente los parámetros de la URL
             $request->validate([

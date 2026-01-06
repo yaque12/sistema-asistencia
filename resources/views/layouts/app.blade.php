@@ -29,42 +29,77 @@
             <!-- Opciones de navegación -->
             <nav class="flex-1 p-4">
                 <ul class="space-y-2">
-                    <!-- Opción: Usuarios -->
+                    @php
+                        $user = auth()->user();
+                        if ($user) {
+                            try {
+                                $user->load('roles');
+                                $rolesUsuario = $user->roles->pluck('codigo_rol')->toArray();
+                                $esAdminOSupervisor = $user->esAdminOSupervisor();
+                                $tieneGerenciacontable = in_array('gerenciacontable01', $rolesUsuario);
+                                $tieneRRHH = in_array('RRHH.PLAN', $rolesUsuario);
+                            } catch (\Exception $e) {
+                                // Si las tablas de roles no existen aún, mostrar todos los módulos
+                                // Esto permite que el sistema funcione mientras se ejecuta el SQL
+                                $rolesUsuario = [];
+                                $esAdminOSupervisor = true; // Permitir acceso completo temporalmente
+                                $tieneGerenciacontable = true;
+                                $tieneRRHH = true;
+                            }
+                        } else {
+                            $rolesUsuario = [];
+                            $esAdminOSupervisor = false;
+                            $tieneGerenciacontable = false;
+                            $tieneRRHH = false;
+                        }
+                    @endphp
+                    
+                    <!-- Opción: Usuarios - Solo ADMIN y supervisor -->
+                    @if($esAdminOSupervisor)
                     <li>
                         <a href="{{ route('usuarios.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('usuarios.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
                             <span class="font-semibold">Usuarios</span>
                         </a>
                     </li>
+                    @endif
                     
-                    <!-- Opción: Empleados -->
+                    <!-- Opción: Empleados - ADMIN, supervisor, gerenciacontable01 -->
+                    @if($esAdminOSupervisor || $tieneGerenciacontable)
                     <li>
                         <a href="{{ route('empleados.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('empleados.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
                             <span class="font-semibold">Empleados</span>
                         </a>
                     </li>
+                    @endif
                     
-                    <!-- Opción: Razones de ausentismos -->
+                    <!-- Opción: Razones de ausentismos - ADMIN, supervisor, gerenciacontable01 -->
+                    @if($esAdminOSupervisor || $tieneGerenciacontable)
                     <li>
                         <a href="{{ route('razones-ausentismos.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('razones-ausentismos.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
                             <span class="font-semibold">Razones de ausentismos</span>
                         </a>
                     </li>
+                    @endif
                     
-                    <!-- Opción: Reporte Diario -->
+                    <!-- Opción: Reporte Diario - ADMIN, supervisor, RRHH.PLAN -->
+                    @if($esAdminOSupervisor || $tieneRRHH)
                     <li>
                         <a href="{{ route('reporte-diario.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('reporte-diario.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
                             <span class="font-semibold">Reporte Diario</span>
                         </a>
                     </li>
+                    @endif
                     
-                    <!-- Opción: Consultas y Descargas -->
+                    <!-- Opción: Consultas y Descargas - ADMIN, supervisor, gerenciacontable01, RRHH.PLAN -->
+                    @if($esAdminOSupervisor || $tieneGerenciacontable || $tieneRRHH)
                     <li>
                         <a href="{{ route('consultas-descargas.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('consultas-descargas.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
                             <span class="font-semibold">Consultas y Descargas</span>
                         </a>
                     </li>
+                    @endif
                     
-                    <!-- Opción: Generar Reporte -->
+                    <!-- Opción: Generar Reporte - Todos los usuarios autenticados -->
                     <li>
                         <a href="{{ route('generar-reporte.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('generar-reporte.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
                             <span class="font-semibold">Generar Reporte</span>

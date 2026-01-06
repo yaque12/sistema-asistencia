@@ -15,47 +15,53 @@ class ReporteDiarioPolicy
 {
     /**
      * Determinar si el usuario puede ver cualquier reporte diario
+     * 
+     * ADMIN, supervisor y RRHH.PLAN pueden ver reportes diarios
      */
     public function viewAny(User $user): bool
     {
-        // Todos los usuarios autenticados pueden ver reportes diarios
-        return true;
+        return $user->esAdminOSupervisor() || $user->tieneRol('RRHH.PLAN');
     }
 
     /**
      * Determinar si el usuario puede ver un reporte diario específico
+     * 
+     * ADMIN, supervisor y RRHH.PLAN pueden ver reportes diarios
      */
     public function view(User $user, ReporteDiario $reporteDiario): bool
     {
-        // Todos los usuarios autenticados pueden ver cualquier reporte diario
-        return true;
+        return $user->esAdminOSupervisor() || $user->tieneRol('RRHH.PLAN');
     }
 
     /**
      * Determinar si el usuario puede crear reportes diarios
+     * 
+     * ADMIN, supervisor y RRHH.PLAN pueden crear reportes diarios
      */
     public function create(User $user): bool
     {
-        // Todos los usuarios autenticados pueden crear reportes diarios
-        return true;
+        return $user->esAdminOSupervisor() || $user->tieneRol('RRHH.PLAN');
     }
 
     /**
      * Determinar si el usuario puede actualizar un reporte diario
+     * 
+     * ADMIN, supervisor y RRHH.PLAN pueden actualizar reportes diarios
      */
     public function update(User $user, ReporteDiario $reporteDiario): bool
     {
-        // Todos los usuarios autenticados pueden actualizar cualquier reporte diario
-        return true;
+        return $user->esAdminOSupervisor() || $user->tieneRol('RRHH.PLAN');
     }
 
     /**
      * Determinar si el usuario puede eliminar un reporte diario
+     * 
+     * Solo ADMIN y supervisor pueden eliminar reportes diarios
+     * RRHH.PLAN NO puede eliminar
      */
     public function delete(User $user, ReporteDiario $reporteDiario): bool
     {
-        // Todos los usuarios autenticados pueden eliminar cualquier reporte diario
-        return true;
+        return $user->esAdminOSupervisor();
     }
 
     /**

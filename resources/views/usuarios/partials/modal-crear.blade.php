@@ -121,6 +121,18 @@
                 <p class="text-red-500 text-xs mt-1 hidden" id="error-crear-confirmar-clave">Las contraseñas no coinciden</p>
             </div>
 
+            <!-- Roles -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Roles
+                </label>
+                <div id="roles-crear-container" class="space-y-2">
+                    <!-- Los roles se cargarán dinámicamente desde JavaScript -->
+                    <p class="text-gray-500 text-xs">Cargando roles...</p>
+                </div>
+                <p class="text-gray-500 text-xs mt-1">Seleccione uno o más roles para el usuario</p>
+            </div>
+
             <!-- Mensaje de éxito/error -->
             <div id="mensaje-crear" class="hidden p-3 rounded-lg"></div>
         </form>

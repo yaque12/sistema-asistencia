@@ -81,6 +81,16 @@ class UpdateUsuarioRequest extends FormRequest
             ];
         }
 
+        // Validar roles si se proporcionan
+        $reglas['roles'] = [
+            'nullable',
+            'array',
+        ];
+        $reglas['roles.*'] = [
+            'string',
+            'exists:roles,codigo_rol',
+        ];
+
         return $reglas;
     }
 

@@ -11,6 +11,7 @@ let reporteDiario = {
     fecha: null,
     registros: [] // Array de objetos con {id_empleado, horas_trabajadas, horas_ausentes, id_razon, comentarios}
 };
+let usuarioRoles = window.usuarioRoles || []; // Roles del usuario autenticado
 
 // Obtener token CSRF del meta tag
 function getCsrfToken() {
@@ -445,12 +446,14 @@ function mostrarTablaEmpleados() {
                     >
                         Editar
                     </button>
+                    ${usuarioRoles.includes('RRHH.PLAN') ? '' : `
                     <button 
                         class="btn-eliminar-fila text-red-600 hover:text-red-900" 
                         data-empleado-id="${empleado.id_empleado}"
                     >
                         Eliminar
                     </button>
+                    `}
                 </td>
             </tr>
         `;
@@ -538,6 +541,12 @@ function editarFila(empleadoId) {
  * Elimina una fila de la tabla
  */
 function eliminarFila(empleadoId) {
+    // Verificar si el usuario tiene permiso para eliminar
+    if (usuarioRoles.includes('RRHH.PLAN')) {
+        mostrarMensajeGlobal('error', 'No tienes permisos para eliminar registros.');
+        return;
+    }
+
     if (!confirm(`¿Está seguro de que desea eliminar el registro de este empleado?\n\nEsta acción eliminará los datos ingresados para este empleado.`)) {
         return;
     }
