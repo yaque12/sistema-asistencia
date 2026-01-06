@@ -193,7 +193,9 @@ function actualizarIndicadores(data) {
     // Actualizar fecha
     const fechaTexto = document.getElementById('fechaActualTexto');
     if (fechaTexto && diaActual.fecha) {
-        const fecha = new Date(diaActual.fecha);
+        // Parsear la fecha correctamente (formato Y-m-d)
+        const partesFecha = diaActual.fecha.split('-');
+        const fecha = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]);
         const opciones = { 
             weekday: 'long', 
             year: 'numeric', 
@@ -262,6 +264,11 @@ function renderizarGraficaSemanal(datosSemana) {
         }
     });
     
+    // Detectar si está en modo oscuro
+    const esModoOscuro = document.documentElement.classList.contains('dark');
+    const colorTexto = esModoOscuro ? 'rgba(237, 242, 247, 0.9)' : 'rgba(26, 32, 44, 0.9)';
+    const colorGrid = esModoOscuro ? 'rgba(237, 242, 247, 0.1)' : 'rgba(26, 32, 44, 0.1)';
+    
     // Crear la gráfica
     const ctx = canvas.getContext('2d');
     graficaSemanal = new Chart(ctx, {
@@ -284,6 +291,11 @@ function renderizarGraficaSemanal(datosSemana) {
                     display: false,
                 },
                 tooltip: {
+                    backgroundColor: esModoOscuro ? 'rgba(26, 32, 44, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                    titleColor: colorTexto,
+                    bodyColor: colorTexto,
+                    borderColor: colorGrid,
+                    borderWidth: 1,
                     callbacks: {
                         label: function(context) {
                             const dia = datosSemana[context.dataIndex];
@@ -297,19 +309,31 @@ function renderizarGraficaSemanal(datosSemana) {
                     beginAtZero: true,
                     max: 100,
                     ticks: {
+                        color: colorTexto,
                         callback: function(value) {
                             return value + '%';
                         }
                     },
+                    grid: {
+                        color: colorGrid,
+                    },
                     title: {
                         display: true,
-                        text: 'Porcentaje de Asistencia'
+                        text: 'Porcentaje de Asistencia',
+                        color: colorTexto,
                     }
                 },
                 x: {
+                    ticks: {
+                        color: colorTexto,
+                    },
+                    grid: {
+                        color: colorGrid,
+                    },
                     title: {
                         display: true,
-                        text: 'Días de la Semana'
+                        text: 'Días de la Semana',
+                        color: colorTexto,
                     }
                 }
             }

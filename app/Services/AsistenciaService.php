@@ -30,10 +30,12 @@ class AsistenciaService
         
         // Obtener empleados con horas trabajadas en la fecha especificada
         // Un empleado tiene horas trabajadas si tiene un reporte con horas_trabajadas > 0
+        // Usamos groupBy para obtener empleados únicos y luego contamos
         $personasConHoras = ReporteDiario::where('fecha', $fecha)
             ->where('horas_trabajadas', '>', 0)
-            ->distinct()
-            ->count('id_empleado');
+            ->groupBy('id_empleado')
+            ->get()
+            ->count();
         
         // Calcular el porcentaje
         // Evitar división por cero
