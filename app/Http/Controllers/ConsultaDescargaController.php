@@ -24,7 +24,9 @@ class ConsultaDescargaController extends Controller
     public function index(Request $request)
     {
         // Verificar autorización usando la Policy
-        if (!Gate::allows('viewAny', \App\Models\User::class)) {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $policy = new \App\Policies\ConsultaDescargaPolicy();
+        if (!$policy->viewAny($user)) {
             abort(403, 'No tienes permisos para acceder a consultas y descargas.');
         }
 
