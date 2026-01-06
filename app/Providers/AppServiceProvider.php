@@ -8,10 +8,12 @@ use App\Models\User;
 use App\Models\Empleado;
 use App\Models\RazonAusentismo;
 use App\Models\ReporteDiario;
+use App\Models\Reporte;
 use App\Policies\UsuarioPolicy;
 use App\Policies\EmpleadoPolicy;
 use App\Policies\RazonAusentismoPolicy;
 use App\Policies\ReporteDiarioPolicy;
+use App\Policies\ReportePolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
         Empleado::class => EmpleadoPolicy::class,
         RazonAusentismo::class => RazonAusentismoPolicy::class,
         ReporteDiario::class => ReporteDiarioPolicy::class,
+        Reporte::class => ReportePolicy::class,
     ];
 
     /**

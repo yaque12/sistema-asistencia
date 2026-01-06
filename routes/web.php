@@ -7,6 +7,7 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\RazonAusentismoController;
 use App\Http\Controllers\ReporteDiarioController;
 use App\Http\Controllers\ConsultaDescargaController;
+use App\Http\Controllers\GenerarReporteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -210,3 +211,33 @@ Route::post('/consultas-descargas/consultar', [ConsultaDescargaController::class
 Route::get('/consultas-descargas/descargar', [ConsultaDescargaController::class, 'descargar'])
     ->middleware('auth')
     ->name('consultas-descargas.descargar');
+
+/*
+|--------------------------------------------------------------------------
+| Módulo de Generar Reporte
+|--------------------------------------------------------------------------
+|
+| Rutas para generar y guardar reportes.
+| Todas las rutas requieren autenticación.
+|
+*/
+
+// Mostrar la vista de generar reporte (GET)
+Route::get('/generar-reporte', [GenerarReporteController::class, 'index'])
+    ->middleware('auth')
+    ->name('generar-reporte.index');
+
+// Crear nuevo reporte (POST)
+Route::post('/generar-reporte', [GenerarReporteController::class, 'store'])
+    ->middleware('auth')
+    ->name('generar-reporte.store');
+
+// Actualizar reporte existente (PUT)
+Route::put('/generar-reporte/{reporte}', [GenerarReporteController::class, 'update'])
+    ->middleware('auth')
+    ->name('generar-reporte.update');
+
+// Eliminar reporte (DELETE)
+Route::delete('/generar-reporte/{reporte}', [GenerarReporteController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('generar-reporte.destroy');

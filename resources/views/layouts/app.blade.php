@@ -63,6 +63,13 @@
                             <span class="font-semibold">Consultas y Descargas</span>
                         </a>
                     </li>
+                    
+                    <!-- Opción: Generar Reporte -->
+                    <li>
+                        <a href="{{ route('generar-reporte.index') }}" class="block px-4 py-3 rounded-lg {{ request()->routeIs('generar-reporte.*') ? 'bg-blue-800' : 'bg-blue-700' }} hover:bg-blue-800 transition duration-200">
+                            <span class="font-semibold">Generar Reporte</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </div>
