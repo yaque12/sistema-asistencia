@@ -24,15 +24,28 @@ class RazonAusentismoController extends Controller
      */
     public function index(Request $request)
     {
-        // Verificar autorización
-        if (!Gate::allows('viewAny', RazonAusentismo::class)) {
-            if ($request->expectsJson()) {
+        // Permitir a RRHH.PLAN consumir la lista vía JSON para Reporte Diario,
+        // manteniendo la vista del módulo restringida según la Policy.
+        if ($request->expectsJson() || $request->ajax()) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            $tieneAccesoListado =
+                $user && (
+                    $user->esAdminOSupervisor() ||
+                    $user->tieneRol('gerenciacontable01') ||
+                    $user->tieneRol('RRHH.PLAN')
+                );
+
+            if (!$tieneAccesoListado) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No tienes permisos para ver la lista de razones de ausentismos.',
                 ], 403);
             }
-            abort(403, 'No tienes permisos para realizar esta acción.');
+        } else {
+            // Verificación normal para vistas (no-AJAX)
+            if (!Gate::allows('viewAny', RazonAusentismo::class)) {
+                abort(403, 'No tienes permisos para realizar esta acción.');
+            }
         }
 
         // Obtener parámetros de búsqueda y paginación
@@ -55,7 +68,7 @@ class RazonAusentismoController extends Controller
         // Ordenar por fecha de creación (más recientes primero)
         $query->orderBy('created_at', 'desc');
 
-        // Si es una petición AJAX, retornar JSON
+        // Si es una petición AJAX/JSON, retornar datos paginados
         if ($request->expectsJson() || $request->ajax()) {
             $razones = $query->paginate($porPagina, ['*'], 'pagina', $pagina);
             

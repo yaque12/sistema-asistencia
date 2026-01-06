@@ -9,6 +9,7 @@ use App\Http\Controllers\RazonAusentismoController;
 use App\Http\Controllers\ReporteDiarioController;
 use App\Http\Controllers\ConsultaDescargaController;
 use App\Http\Controllers\GenerarReporteController;
+use App\Http\Controllers\Api\AsistenciaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,6 +63,23 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/bienvenida', [AuthController::class, 'bienvenida'])
     ->middleware('auth')
     ->name('bienvenida');
+
+/*
+||--------------------------------------------------------------------------
+|| API - Estadísticas de Asistencia
+||--------------------------------------------------------------------------
+||
+|| Rutas API para obtener estadísticas de asistencia.
+|| Todas las rutas requieren autenticación.
+||
+*/
+
+// Obtener estadísticas de asistencia (GET)
+// URL: http://localhost/api/asistencia/estadisticas
+// Parámetros opcionales: fecha (formato Y-m-d)
+Route::get('/api/asistencia/estadisticas', [AsistenciaController::class, 'obtenerEstadisticas'])
+    ->middleware('auth')
+    ->name('api.asistencia.estadisticas');
 
 /*
 ||--------------------------------------------------------------------------
