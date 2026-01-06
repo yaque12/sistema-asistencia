@@ -66,20 +66,22 @@ class ReporteDiarioPolicy
 
     /**
      * Determinar si el usuario puede restaurar un reporte diario eliminado
+     * 
+     * Solo ADMIN y supervisor pueden restaurar reportes diarios
      */
     public function restore(User $user, ReporteDiario $reporteDiario): bool
     {
-        // Todos los usuarios autenticados pueden restaurar reportes diarios
-        return true;
+        return $user->esAdminOSupervisor();
     }
 
     /**
      * Determinar si el usuario puede eliminar permanentemente un reporte diario
+     * 
+     * Solo ADMIN y supervisor pueden eliminar permanentemente reportes diarios
      */
     public function forceDelete(User $user, ReporteDiario $reporteDiario): bool
     {
-        // Todos los usuarios autenticados pueden eliminar permanentemente reportes diarios
-        return true;
+        return $user->esAdminOSupervisor();
     }
 }
 
