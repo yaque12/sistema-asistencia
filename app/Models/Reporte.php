@@ -59,8 +59,26 @@ class Reporte extends Model
     protected function casts(): array
     {
         return [
-            'fecha' => 'date',
+            // No usar cast de fecha para evitar problemas de zona horaria
+            // La fecha se guardará como string YYYY-MM-DD directamente
         ];
+    }
+
+    /**
+     * Accessor para asegurar que la fecha siempre se devuelva como string YYYY-MM-DD
+     *
+     * @param mixed $value
+     * @return string
+     */
+    public function getFechaAttribute($value)
+    {
+        // Si es un objeto DateTime, convertir a string
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+        
+        // Si ya es string, devolverlo tal cual
+        return $value;
     }
 }
 

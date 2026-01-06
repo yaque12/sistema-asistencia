@@ -9,6 +9,9 @@
         <h1 class="text-3xl font-bold text-gray-800">Generar Reporte</h1>
     </div>
 
+    <!-- Contenedor para mensajes globales -->
+    <div id="mensaje-global" class="hidden mb-6 p-4 rounded-lg"></div>
+
     <!-- Botón Generar Reporte (inicial) -->
     <div id="contenedor-boton-inicial" class="flex justify-center items-center mb-6">
         <button 
@@ -19,39 +22,8 @@
         </button>
     </div>
 
-    <!-- Tabla de reportes -->
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-6">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comentarios</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-reportes-body" class="bg-white divide-y divide-gray-200">
-                    <!-- Los reportes se cargarán dinámicamente desde JavaScript -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Mensaje cuando no hay resultados -->
-        <div id="sin-resultados" class="hidden p-8 text-center text-gray-500">
-            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <p class="text-lg font-medium">No se encontraron reportes</p>
-            <p class="text-sm mt-1">Haz clic en "Generar Reporte" para crear uno nuevo</p>
-        </div>
-    </div>
-
-    <!-- Contenedor para mensajes globales -->
-    <div id="mensaje-global" class="hidden mb-6 p-4 rounded-lg"></div>
-
     <!-- Formulario (oculto inicialmente) -->
-    <div id="contenedor-formulario" class="hidden">
+    <div id="contenedor-formulario" class="hidden mb-6">
         <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
             <form id="formulario-generar-reporte">
                 <!-- Campo: Fecha -->
@@ -115,6 +87,34 @@
         </div>
     </div>
 
+    <!-- Tabla de reportes (siempre visible en la parte inferior) -->
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-6">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comentarios</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-reportes-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Los reportes se cargarán dinámicamente desde JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        <div id="sin-resultados" class="hidden p-8 text-center text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-lg font-medium">No se encontraron reportes</p>
+            <p class="text-sm mt-1">Haz clic en "Generar Reporte" para crear uno nuevo</p>
+        </div>
+    </div>
+
 @endsection
 
 @push('scripts')
@@ -155,11 +155,14 @@
             }, 5000);
         }
 
-        // Formatear fecha para mostrar
+        // Formatear fecha para mostrar (SIN conversión de timezone)
         function formatearFecha(fecha) {
             if (!fecha) return '-';
-            const date = new Date(fecha);
-            return date.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            
+            // Parsear el string directamente sin usar new Date()
+            // para evitar conversión de timezone
+            const [year, month, day] = fecha.split('-');
+            return `${day}/${month}/${year}`;
         }
 
         // Cargar reportes desde el servidor
