@@ -98,7 +98,7 @@
     <!-- Tarjeta de acciones rápidas -->
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h3 class="text-xl font-semibold text-gray-800">Acciones Rápidas</h3>
+            <h3 class="text-xl font-semibold text-gray-800">Acciones Inmediatas de Hoy</h3>
         </div>
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -114,9 +114,12 @@
                     </span>
                 </button>
                 
-                <!-- Botón de ejemplo 2 -->
-                <button class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow">
-                    Ver Reportes
+                <!-- Botón de Panel de Control de Ausentismos -->
+                <button 
+                    id="btnVerReportes" 
+                    class="bg-orange-400 hover:bg-orange-500 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow"
+                >
+                    Panel de Control de Ausentismos
                 </button>
                 
                 <!-- Botón de ejemplo 3 -->
@@ -184,6 +187,65 @@
                     </a>
                     <button 
                         id="btnCerrarModal2" 
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+                    >
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Panel de Control de Ausentismo -->
+    <div 
+        id="modalReportesAusentismo" 
+        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4"
+    >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <!-- Header del Modal -->
+            <div class="bg-red-600 dark:bg-red-800 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="text-2xl font-bold">Panel de Control de Ausentismo</h3>
+                <button 
+                    id="btnCerrarModalAusentismo" 
+                    class="text-white hover:text-gray-200 text-2xl font-bold"
+                >
+                    ×
+                </button>
+            </div>
+            
+            <!-- Contenido del Modal -->
+            <div class="p-6">
+                <!-- Indicador del Día Actual -->
+                <div class="bg-gradient-to-r from-red-500 to-red-600 dark:from-red-700 dark:to-red-800 rounded-lg p-6 mb-6 text-white">
+                    <h4 class="text-lg font-semibold mb-2">Ausentismo del Día</h4>
+                    <div class="flex items-end gap-4">
+                        <div class="flex-1">
+                            <p class="text-sm opacity-90 mb-1" id="fechaAusentismoTexto">Cargando...</p>
+                            <p class="text-4xl font-bold" id="totalPersonasAusentes">0</p>
+                            <p class="text-sm opacity-90 mt-2" id="detalleAusentismo">
+                                personas con ausentismo
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold" id="iconoEstadoAusentismo">📊</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gráfica de Ausentismo por Razón -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+                    <h4 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                        Ausentismo por Razón
+                    </h4>
+                    <div class="relative h-96">
+                        <canvas id="graficaAusentismo"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Botones de Acción -->
+                <div class="mt-6 flex justify-end gap-3">
+                    <button 
+                        id="btnCerrarModalAusentismo2" 
                         class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
                     >
                         Cerrar

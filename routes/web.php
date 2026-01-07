@@ -81,6 +81,13 @@ Route::get('/api/asistencia/estadisticas', [AsistenciaController::class, 'obtene
     ->middleware('auth')
     ->name('api.asistencia.estadisticas');
 
+// Obtener estadísticas de ausentismo por razón (GET)
+// URL: http://localhost/api/asistencia/ausentismo-por-razon
+// Parámetros opcionales: fecha (formato Y-m-d)
+Route::get('/api/asistencia/ausentismo-por-razon', [AsistenciaController::class, 'obtenerAusentismoPorRazon'])
+    ->middleware('auth')
+    ->name('api.asistencia.ausentismo-por-razon');
+
 /*
 ||--------------------------------------------------------------------------
 || Módulo de Gestión de Usuarios

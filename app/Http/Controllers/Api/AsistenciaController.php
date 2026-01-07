@@ -115,5 +115,78 @@ class AsistenciaController extends Controller
             ], 500, [], JSON_UNESCAPED_UNICODE);
         }
     }
+
+    /**
+     * Obtener estadísticas de ausentismo agrupadas por razón de ausentismo
+     * 
+     * Endpoint que retorna la cantidad de personas que faltaron ordenadas por razón
+     * de ausentismo para el día actual o una fecha específica.
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function obtenerAusentismoPorRazon(Request $request): JsonResponse
+    {
+        try {
+            // Obtener fecha del request o usar hoy por defecto
+            $fecha = $request->input('fecha');
+            
+            // Validar formato de fecha si se proporciona
+            if ($fecha !== null) {
+                try {
+                    Carbon::parse($fecha);
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Formato de fecha inválido. Use el formato Y-m-d (ejemplo: 2024-01-15)',
+                    ], 400);
+                }
+            } else {
+                // Usar la fecha de hoy según la zona horaria configurada
+                $timezone = config('app.timezone', 'America/El_Salvador');
+                Carbon::setLocale('es');
+                
+                // Obtener la fecha de hoy en la zona horaria correcta
+                $fechaCarbon = Carbon::now($timezone)->startOfDay();
+                $fecha = $fechaCarbon->format('Y-m-d');
+            }
+            
+            // Obtener estadísticas de ausentismo por razón
+            $ausentismoPorRazon = $this->asistenciaService->obtenerAusentismoPorRazon($fecha);
+            
+            // Calcular total de personas con ausentismo
+            $totalPersonasAusentes = array_sum(array_column($ausentismoPorRazon, 'cantidad_personas'));
+            
+            // Log para depuración
+            \Log::info('Respuesta de ausentismo por razón', [
+                'fecha' => $fecha,
+                'total_razones' => count($ausentismoPorRazon),
+                'total_personas_ausentes' => $totalPersonasAusentes,
+            ]);
+            
+            // Retornar respuesta JSON
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'fecha' => $fecha,
+                    'ausentismo_por_razon' => $ausentismoPorRazon,
+                    'total_personas_ausentes' => $totalPersonasAusentes,
+                ],
+            ], 200, [], JSON_UNESCAPED_UNICODE);
+            
+        } catch (\Exception $e) {
+            // Log del error para debugging
+            \Log::error('Error en AsistenciaController::obtenerAusentismoPorRazon', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // En caso de error, retornar mensaje de error
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener estadísticas de ausentismo: ' . $e->getMessage(),
+            ], 500, [], JSON_UNESCAPED_UNICODE);
+        }
+    }
 }
 

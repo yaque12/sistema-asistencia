@@ -204,5 +204,65 @@ class AsistenciaService
         
         return $dias[$diaDeSemana] ?? '???';
     }
+
+    /**
+     * Obtener estadísticas de ausentismo agrupadas por razón de ausentismo
+     * 
+     * Calcula la cantidad de personas que faltaron ordenadas por razón de ausentismo
+     * para una fecha específica.
+     * 
+     * @param string $fecha Fecha en formato Y-m-d
+     * @return array Array con estadísticas de ausentismo por razón
+     */
+    public function obtenerAusentismoPorRazon(string $fecha): array
+    {
+        try {
+            // Consultar reportes con ausentismo (horas_ausentes > 0 y id_razon IS NOT NULL)
+            // Agrupar por id_razon y contar empleados únicos
+            $ausentismoPorRazon = DB::table('reportes_diarios')
+                ->select(
+                    'reportes_diarios.id_razon',
+                    'razones_ausentismos.razon',
+                    DB::raw('COUNT(DISTINCT reportes_diarios.id_empleado) as cantidad_personas'),
+                    DB::raw('SUM(reportes_diarios.horas_ausentes) as total_ausentes')
+                )
+                ->join('razones_ausentismos', 'reportes_diarios.id_razon', '=', 'razones_ausentismos.id_razon')
+                ->where('reportes_diarios.fecha', $fecha)
+                ->where('reportes_diarios.horas_ausentes', '>', 0)
+                ->whereNotNull('reportes_diarios.id_razon')
+                ->groupBy('reportes_diarios.id_razon', 'razones_ausentismos.razon')
+                ->orderBy('cantidad_personas', 'DESC')
+                ->get();
+
+            // Convertir a array y formatear los datos
+            $resultado = [];
+            foreach ($ausentismoPorRazon as $item) {
+                $resultado[] = [
+                    'id_razon' => (int) $item->id_razon,
+                    'razon' => $item->razon,
+                    'cantidad_personas' => (int) $item->cantidad_personas,
+                    'total_ausentes' => (float) $item->total_ausentes,
+                ];
+            }
+
+            // Log para depuración
+            \Log::info('Ausentismo por razón', [
+                'fecha' => $fecha,
+                'total_razones' => count($resultado),
+                'datos' => $resultado,
+            ]);
+
+            return $resultado;
+        } catch (\Exception $e) {
+            // En caso de error, retornar array vacío
+            \Log::error('Error en AsistenciaService::obtenerAusentismoPorRazon', [
+                'fecha' => $fecha,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return [];
+        }
+    }
 }
 

@@ -4,6 +4,8 @@
 // Variables globales
 let graficaSemanal = null;
 let estadisticasActuales = null;
+let graficaAusentismo = null;
+let datosAusentismo = null;
 
 // Obtener token CSRF del meta tag
 function getCsrfToken() {
@@ -55,6 +57,9 @@ function inicializarPanelAsistencia() {
     
     // Cargar estadísticas iniciales para el badge
     cargarEstadisticasParaBadge();
+    
+    // Inicializar panel de ausentismo
+    inicializarPanelAusentismo();
 }
 
 /**
@@ -423,6 +428,333 @@ function mostrarError(mensaje) {
     }
     if (fechaActualTexto) {
         fechaActualTexto.textContent = mensaje;
+    }
+}
+
+/**
+ * Inicializar el panel de ausentismo
+ */
+function inicializarPanelAusentismo() {
+    const btnVerReportes = document.getElementById('btnVerReportes');
+    const btnCerrarModalAusentismo = document.getElementById('btnCerrarModalAusentismo');
+    const btnCerrarModalAusentismo2 = document.getElementById('btnCerrarModalAusentismo2');
+    const modal = document.getElementById('modalReportesAusentismo');
+    
+    // Si no existe el botón, no hacer nada (no estamos en la página de bienvenida)
+    if (!btnVerReportes) {
+        return;
+    }
+    
+    // Event listener para abrir el modal
+    btnVerReportes.addEventListener('click', function() {
+        abrirModalReportes();
+    });
+    
+    // Event listeners para cerrar el modal
+    if (btnCerrarModalAusentismo) {
+        btnCerrarModalAusentismo.addEventListener('click', cerrarModalReportes);
+    }
+    
+    if (btnCerrarModalAusentismo2) {
+        btnCerrarModalAusentismo2.addEventListener('click', cerrarModalReportes);
+    }
+    
+    // Cerrar modal al hacer clic fuera de él
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                cerrarModalReportes();
+            }
+        });
+    }
+}
+
+/**
+ * Abrir el modal de reportes y cargar datos
+ */
+function abrirModalReportes() {
+    const modal = document.getElementById('modalReportesAusentismo');
+    if (!modal) {
+        return;
+    }
+    
+    // Mostrar el modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Cargar datos de ausentismo
+    cargarAusentismoPorRazon();
+}
+
+/**
+ * Cerrar el modal de reportes
+ */
+function cerrarModalReportes() {
+    const modal = document.getElementById('modalReportesAusentismo');
+    if (!modal) {
+        return;
+    }
+    
+    // Ocultar el modal
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+/**
+ * Cargar datos de ausentismo por razón desde la API
+ */
+async function cargarAusentismoPorRazon() {
+    try {
+        // Mostrar estado de carga
+        mostrarEstadoCargaAusentismo();
+        
+        // Hacer petición a la API
+        const response = await fetch('/api/asistencia/ausentismo-por-razon', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+        
+        // Verificar si la respuesta es HTML (redirección a login)
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+            throw new Error('No estás autenticado. Por favor, recarga la página.');
+        }
+        
+        if (!response.ok) {
+            // Intentar obtener el mensaje de error del JSON
+            let errorMessage = 'Error al cargar datos de ausentismo';
+            try {
+                const errorData = await response.json();
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
+            } catch (e) {
+                errorMessage = `Error ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            datosAusentismo = data.data;
+            actualizarIndicadoresAusentismo(data.data);
+            renderizarGraficaAusentismo(data.data.ausentismo_por_razon);
+        } else {
+            const mensaje = data.message || 'No se pudieron cargar los datos de ausentismo';
+            mostrarErrorAusentismo(mensaje);
+        }
+        
+    } catch (error) {
+        console.error('Error al cargar datos de ausentismo:', error);
+        const mensajeError = error.message || 'Error al cargar los datos de ausentismo. Por favor, intente nuevamente.';
+        mostrarErrorAusentismo(mensajeError);
+    }
+}
+
+/**
+ * Actualizar los indicadores de ausentismo
+ */
+function actualizarIndicadoresAusentismo(data) {
+    // Actualizar fecha
+    const fechaTexto = document.getElementById('fechaAusentismoTexto');
+    if (fechaTexto && data.fecha) {
+        const partesFecha = data.fecha.split('-');
+        if (partesFecha.length === 3) {
+            const año = parseInt(partesFecha[0], 10);
+            const mes = parseInt(partesFecha[1], 10) - 1;
+            const dia = parseInt(partesFecha[2], 10);
+            
+            const fecha = new Date(año, mes, dia);
+            
+            if (!isNaN(fecha.getTime())) {
+                const opciones = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric'
+                };
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', opciones);
+                fechaTexto.textContent = fechaFormateada;
+            } else {
+                fechaTexto.textContent = data.fecha;
+            }
+        } else {
+            fechaTexto.textContent = data.fecha;
+        }
+    }
+    
+    // Actualizar total de personas ausentes
+    const totalPersonasAusentes = document.getElementById('totalPersonasAusentes');
+    if (totalPersonasAusentes) {
+        totalPersonasAusentes.textContent = data.total_personas_ausentes || 0;
+    }
+    
+    // Actualizar ícono según el total
+    const iconoEstadoAusentismo = document.getElementById('iconoEstadoAusentismo');
+    if (iconoEstadoAusentismo) {
+        const total = data.total_personas_ausentes || 0;
+        if (total === 0) {
+            iconoEstadoAusentismo.textContent = '✅';
+        } else if (total <= 5) {
+            iconoEstadoAusentismo.textContent = '⚠️';
+        } else {
+            iconoEstadoAusentismo.textContent = '❌';
+        }
+    }
+}
+
+/**
+ * Renderizar la gráfica de ausentismo por razón con Chart.js
+ */
+function renderizarGraficaAusentismo(datosAusentismo) {
+    const canvas = document.getElementById('graficaAusentismo');
+    if (!canvas) {
+        return;
+    }
+    
+    // Destruir gráfica anterior si existe
+    if (graficaAusentismo) {
+        graficaAusentismo.destroy();
+    }
+    
+    // Si no hay datos, mostrar mensaje
+    if (!datosAusentismo || datosAusentismo.length === 0) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '16px Arial';
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+        ctx.fillText('No hay datos de ausentismo para esta fecha', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    // Preparar datos para la gráfica (barras horizontales)
+    const razones = datosAusentismo.map(item => item.razon || 'Sin razón');
+    const cantidades = datosAusentismo.map(item => item.cantidad_personas || 0);
+    
+    // Determinar colores según la cantidad (más personas = más intenso el rojo)
+    const maxCantidad = Math.max(...cantidades, 1);
+    const colores = cantidades.map(cantidad => {
+        const intensidad = cantidad / maxCantidad;
+        if (intensidad >= 0.7) {
+            return 'rgba(220, 38, 38, 0.8)'; // Rojo intenso
+        } else if (intensidad >= 0.4) {
+            return 'rgba(239, 68, 68, 0.8)'; // Rojo medio
+        } else {
+            return 'rgba(248, 113, 113, 0.8)'; // Rojo claro
+        }
+    });
+    
+    // Detectar si está en modo oscuro
+    const esModoOscuro = document.documentElement.classList.contains('dark');
+    const colorTexto = esModoOscuro ? 'rgba(237, 242, 247, 0.9)' : 'rgba(26, 32, 44, 0.9)';
+    const colorGrid = esModoOscuro ? 'rgba(237, 242, 247, 0.1)' : 'rgba(26, 32, 44, 0.1)';
+    
+    // Crear la gráfica de barras horizontal
+    const ctx = canvas.getContext('2d');
+    graficaAusentismo = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: razones,
+            datasets: [{
+                label: 'Cantidad de Personas',
+                data: cantidades,
+                backgroundColor: colores,
+                borderColor: colores.map(color => color.replace('0.8', '1')),
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Barras horizontales
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    backgroundColor: esModoOscuro ? 'rgba(26, 32, 44, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                    titleColor: colorTexto,
+                    bodyColor: colorTexto,
+                    borderColor: colorGrid,
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            const item = datosAusentismo[context.dataIndex];
+                            return `${item.cantidad_personas} persona${item.cantidad_personas !== 1 ? 's' : ''} (${item.total_ausentes.toFixed(2)} horas)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: colorTexto,
+                        stepSize: 1,
+                        precision: 0,
+                    },
+                    grid: {
+                        color: colorGrid,
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Personas',
+                        color: colorTexto,
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: colorTexto,
+                    },
+                    grid: {
+                        color: colorGrid,
+                    },
+                    title: {
+                        display: true,
+                        text: 'Razones de Ausentismo',
+                        color: colorTexto,
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Mostrar estado de carga para ausentismo
+ */
+function mostrarEstadoCargaAusentismo() {
+    const totalPersonasAusentes = document.getElementById('totalPersonasAusentes');
+    const fechaAusentismoTexto = document.getElementById('fechaAusentismoTexto');
+    
+    if (totalPersonasAusentes) {
+        totalPersonasAusentes.textContent = 'Cargando...';
+    }
+    if (fechaAusentismoTexto) {
+        fechaAusentismoTexto.textContent = 'Cargando...';
+    }
+}
+
+/**
+ * Mostrar mensaje de error para ausentismo
+ */
+function mostrarErrorAusentismo(mensaje) {
+    const totalPersonasAusentes = document.getElementById('totalPersonasAusentes');
+    const fechaAusentismoTexto = document.getElementById('fechaAusentismoTexto');
+    
+    if (totalPersonasAusentes) {
+        totalPersonasAusentes.textContent = 'Error';
+    }
+    if (fechaAusentismoTexto) {
+        fechaAusentismoTexto.textContent = mensaje;
     }
 }
 
