@@ -103,11 +103,29 @@ async function cargarEstadisticas() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': getCsrfToken(),
                 'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
+            credentials: 'same-origin',
         });
         
+        // Verificar si la respuesta es HTML (redirección a login)
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+            throw new Error('No estás autenticado. Por favor, recarga la página.');
+        }
+        
         if (!response.ok) {
-            throw new Error('Error al cargar estadísticas');
+            // Intentar obtener el mensaje de error del JSON
+            let errorMessage = 'Error al cargar estadísticas';
+            try {
+                const errorData = await response.json();
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
+            } catch (e) {
+                errorMessage = `Error ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
         }
         
         const data = await response.json();
@@ -117,12 +135,14 @@ async function cargarEstadisticas() {
             actualizarIndicadores(data.data);
             renderizarGraficaSemanal(data.data.semana);
         } else {
-            mostrarError('No se pudieron cargar las estadísticas');
+            const mensaje = data.message || 'No se pudieron cargar las estadísticas';
+            mostrarError(mensaje);
         }
         
     } catch (error) {
         console.error('Error al cargar estadísticas:', error);
-        mostrarError('Error al cargar las estadísticas. Por favor, intente nuevamente.');
+        const mensajeError = error.message || 'Error al cargar las estadísticas. Por favor, intente nuevamente.';
+        mostrarError(mensajeError);
     }
 }
 
@@ -137,10 +157,18 @@ async function cargarEstadisticasParaBadge() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': getCsrfToken(),
                 'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
+            credentials: 'same-origin',
         });
         
         if (!response.ok) {
+            return;
+        }
+        
+        // Verificar si la respuesta es JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
             return;
         }
         
@@ -194,15 +222,42 @@ function actualizarIndicadores(data) {
     const fechaTexto = document.getElementById('fechaActualTexto');
     if (fechaTexto && diaActual.fecha) {
         // Parsear la fecha correctamente (formato Y-m-d)
+        // La fecha viene del servidor en formato Y-m-d (ej: 2026-01-06)
+        // IMPORTANTE: No usar new Date(string) porque puede interpretar como UTC y cambiar el día
         const partesFecha = diaActual.fecha.split('-');
-        const fecha = new Date(partesFecha[0], partesFecha[1] - 1, partesFecha[2]);
-        const opciones = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        };
-        fechaTexto.textContent = fecha.toLocaleDateString('es-ES', opciones);
+        if (partesFecha.length === 3) {
+            const año = parseInt(partesFecha[0], 10);
+            const mes = parseInt(partesFecha[1], 10) - 1; // Los meses en JS van de 0-11
+            const dia = parseInt(partesFecha[2], 10);
+            
+            // Crear la fecha usando el constructor local (no UTC) para mantener el día correcto
+            // new Date(año, mes, dia) crea la fecha en la zona horaria local del navegador
+            const fecha = new Date(año, mes, dia);
+            
+            // Log para depuración
+            console.log('Fecha recibida del servidor:', diaActual.fecha);
+            console.log('Fecha parseada:', fecha);
+            console.log('Día de la semana (número):', fecha.getDay()); // 0=domingo, 1=lunes, etc.
+            
+            // Verificar que la fecha sea válida
+            if (!isNaN(fecha.getTime())) {
+                // No usar timeZone en las opciones porque la fecha ya está en formato local
+                // El servidor ya calculó la fecha correcta según la zona horaria de El Salvador
+                const opciones = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric'
+                };
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', opciones);
+                console.log('Fecha formateada:', fechaFormateada);
+                fechaTexto.textContent = fechaFormateada;
+            } else {
+                fechaTexto.textContent = diaActual.fecha;
+            }
+        } else {
+            fechaTexto.textContent = diaActual.fecha;
+        }
     }
     
     // Actualizar porcentaje

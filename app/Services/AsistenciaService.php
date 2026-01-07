@@ -5,6 +5,14 @@ namespace App\Services;
 use App\Models\Empleado;
 use App\Models\ReporteDiario;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Servicio de Estadísticas de Asistencia
+ * 
+ * Este servicio calcula estadísticas de asistencia diarias y semanales
+ * para el panel de control de asistencia.
+ */
 
 /**
  * Servicio de Estadísticas de Asistencia
@@ -14,6 +22,27 @@ use Carbon\Carbon;
  */
 class AsistenciaService
 {
+    /**
+     * Obtener la zona horaria configurada en la aplicación
+     * 
+     * @return string
+     */
+    private function getTimezone(): string
+    {
+        return config('app.timezone', 'America/El_Salvador');
+    }
+
+    /**
+     * Obtener la fecha de hoy en la zona horaria configurada
+     * 
+     * @return string Fecha en formato Y-m-d
+     */
+    private function getFechaHoy(): string
+    {
+        $timezone = $this->getTimezone();
+        // Usar now() y startOfDay() para mayor precisión
+        return Carbon::now($timezone)->startOfDay()->format('Y-m-d');
+    }
     /**
      * Obtener estadísticas de asistencia para un día específico
      * 
@@ -25,31 +54,66 @@ class AsistenciaService
      */
     public function obtenerEstadisticasDia(string $fecha): array
     {
-        // Obtener el total de empleados
-        $totalEmpleados = Empleado::count();
-        
-        // Obtener empleados con horas trabajadas en la fecha especificada
-        // Un empleado tiene horas trabajadas si tiene un reporte con horas_trabajadas > 0
-        // Usamos groupBy para obtener empleados únicos y luego contamos
-        $personasConHoras = ReporteDiario::where('fecha', $fecha)
-            ->where('horas_trabajadas', '>', 0)
-            ->groupBy('id_empleado')
-            ->get()
-            ->count();
-        
-        // Calcular el porcentaje
-        // Evitar división por cero
-        $porcentaje = 0;
-        if ($totalEmpleados > 0) {
-            $porcentaje = round(($personasConHoras / $totalEmpleados) * 100, 2);
+        try {
+            // Obtener el total de empleados usando DB::table directamente
+            $totalEmpleados = DB::table('empleados')->count();
+            
+            // Obtener empleados con horas trabajadas en la fecha especificada
+            // Un empleado tiene horas trabajadas si tiene un reporte con horas_trabajadas > 0
+            // Usamos DB::table directamente para evitar problemas con el cast de fecha del modelo
+            // y usamos groupBy para contar empleados únicos
+            
+            // Primero, verificar cuántos reportes hay para esta fecha
+            $totalReportes = DB::table('reportes_diarios')
+                ->where('fecha', $fecha)
+                ->count();
+            
+            // Contar empleados únicos con horas trabajadas > 0
+            // Usamos una subconsulta más eficiente
+            $personasConHoras = DB::table('reportes_diarios')
+                ->select('id_empleado')
+                ->where('fecha', $fecha)
+                ->where('horas_trabajadas', '>', 0)
+                ->distinct()
+                ->count('id_empleado');
+            
+            // Calcular el porcentaje
+            // Evitar división por cero
+            $porcentaje = 0;
+            if ($totalEmpleados > 0) {
+                $porcentaje = round(($personasConHoras / $totalEmpleados) * 100, 2);
+            }
+            
+            // Log para depuración
+            \Log::info('Estadísticas del día', [
+                'fecha' => $fecha,
+                'total_empleados' => $totalEmpleados,
+                'total_reportes' => $totalReportes,
+                'personas_con_horas' => $personasConHoras,
+                'porcentaje' => $porcentaje,
+            ]);
+            
+            return [
+                'fecha' => $fecha,
+                'total_empleados' => (int) $totalEmpleados,
+                'personas_con_horas' => (int) $personasConHoras,
+                'porcentaje' => $porcentaje,
+            ];
+        } catch (\Exception $e) {
+            // En caso de error, retornar valores por defecto
+            \Log::error('Error en AsistenciaService::obtenerEstadisticasDia', [
+                'fecha' => $fecha,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return [
+                'fecha' => $fecha,
+                'total_empleados' => 0,
+                'personas_con_horas' => 0,
+                'porcentaje' => 0,
+            ];
         }
-        
-        return [
-            'fecha' => $fecha,
-            'total_empleados' => $totalEmpleados,
-            'personas_con_horas' => $personasConHoras,
-            'porcentaje' => $porcentaje,
-        ];
     }
 
     /**
@@ -65,11 +129,13 @@ class AsistenciaService
     {
         // Si no se proporciona fecha, usar hoy
         if ($fecha === null) {
-            $fecha = Carbon::today()->format('Y-m-d');
+            $fecha = $this->getFechaHoy();
         }
         
         // Obtener el lunes de la semana actual
-        $fechaCarbon = Carbon::parse($fecha);
+        // Asegurar que se use la zona horaria correcta al parsear
+        $timezone = $this->getTimezone();
+        $fechaCarbon = Carbon::parse($fecha)->setTimezone($timezone);
         $lunes = $fechaCarbon->copy()->startOfWeek(Carbon::MONDAY);
         $domingo = $fechaCarbon->copy()->endOfWeek(Carbon::SUNDAY);
         

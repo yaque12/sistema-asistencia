@@ -58,7 +58,25 @@ class AsistenciaController extends Controller
                     ], 400);
                 }
             } else {
-                $fecha = Carbon::today()->format('Y-m-d');
+                // Usar la fecha de hoy según la zona horaria configurada en Laravel
+                // La zona horaria se configura en config/app.php
+                $timezone = config('app.timezone', 'America/El_Salvador');
+                Carbon::setLocale('es');
+                
+                // Obtener la fecha de hoy en la zona horaria correcta
+                // IMPORTANTE: Usar now() y luego startOfDay() para evitar problemas de zona horaria
+                $fechaCarbon = Carbon::now($timezone)->startOfDay();
+                $fecha = $fechaCarbon->format('Y-m-d');
+                
+                // Log para depuración
+                \Log::info('Fecha calculada en API', [
+                    'timezone_config' => config('app.timezone'),
+                    'timezone_usada' => $timezone,
+                    'fecha_calculada' => $fecha,
+                    'carbon_today' => Carbon::today($timezone)->format('Y-m-d'),
+                    'carbon_now' => Carbon::now($timezone)->format('Y-m-d H:i:s'),
+                    'dia_semana' => $fechaCarbon->locale('es')->dayName,
+                ]);
             }
             
             // Obtener estadísticas del día actual
@@ -67,6 +85,13 @@ class AsistenciaController extends Controller
             // Obtener estadísticas de la semana actual
             $estadisticasSemana = $this->asistenciaService->obtenerEstadisticasSemana($fecha);
             
+            // Log para depuración
+            \Log::info('Respuesta de estadísticas', [
+                'fecha' => $fecha,
+                'estadisticas_dia' => $estadisticasDia,
+                'total_semana' => count($estadisticasSemana),
+            ]);
+            
             // Retornar respuesta JSON
             return response()->json([
                 'success' => true,
@@ -74,14 +99,20 @@ class AsistenciaController extends Controller
                     'dia_actual' => $estadisticasDia,
                     'semana' => $estadisticasSemana,
                 ],
-            ]);
+            ], 200, [], JSON_UNESCAPED_UNICODE);
             
         } catch (\Exception $e) {
+            // Log del error para debugging
+            \Log::error('Error en AsistenciaController::obtenerEstadisticas', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             // En caso de error, retornar mensaje de error
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener estadísticas: ' . $e->getMessage(),
-            ], 500);
+            ], 500, [], JSON_UNESCAPED_UNICODE);
         }
     }
 }
