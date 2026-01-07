@@ -101,12 +101,12 @@
             <h3 class="text-xl font-semibold text-gray-800">Acciones Inmediatas de Hoy</h3>
         </div>
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4">
                 
                 <!-- Botón de Panel de Control de Asistencia con indicador -->
                 <button 
                     id="btnRegistrarAsistencia" 
-                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow relative"
+                    class="bg-lime-400 hover:bg-lime-500 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow relative"
                 >
                     <span>Panel de Control de Asistencia</span>
                     <span id="badgeAsistencia" class="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center hidden">
@@ -120,11 +120,6 @@
                     class="bg-orange-400 hover:bg-orange-500 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow"
                 >
                     Panel de Control de Ausentismos
-                </button>
-                
-                <!-- Botón de ejemplo 3 -->
-                <button class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow">
-                    Configuración
                 </button>
                 
             </div>
@@ -178,13 +173,7 @@
                 </div>
                 
                 <!-- Botones de Acción -->
-                <div class="mt-6 flex justify-end gap-3">
-                    <a 
-                        href="{{ route('reporte-diario.index') }}" 
-                        class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
-                    >
-                        Ir a Registrar Asistencia
-                    </a>
+                <div class="mt-6 flex justify-end">
                     <button 
                         id="btnCerrarModal2" 
                         class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
