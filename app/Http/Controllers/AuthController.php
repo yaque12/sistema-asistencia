@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Hash;
  * 
  * Este controlador maneja todo lo relacionado con el inicio de sesión,
  * cierre de sesión y la creación automática del usuario supervisor.
- * 
- * El código está escrito de forma simple y educativa para que sea
- * fácil de entender para estudiantes de ingeniería.
+ * .
  */
 class AuthController extends Controller
 {
@@ -78,7 +76,7 @@ class AuthController extends Controller
                 'codigo_empleado' => 'SUP001',              // Código de empleado
             ]);
 
-            // Mensaje informativo (opcional, puedes comentarlo si no quieres mostrarlo)
+            // Mensaje informativo
             // Este mensaje aparecerá cuando se cree el usuario supervisor
             session()->flash('info', 'Usuario supervisor creado automáticamente. Puede iniciar sesión con: supervisor / supervisor');
         }

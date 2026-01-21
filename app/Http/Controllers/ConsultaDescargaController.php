@@ -176,13 +176,13 @@ class ConsultaDescargaController extends Controller
                     // Escribir encabezados usando punto y coma como delimitador
                     fputcsv($handle, [
                         'Fecha',
-                        'Código Empleado',
+                        'Codigo Empleado',
                         'Nombres',
                         'Apellidos',
                         'Departamento',
                         'Horas Trabajadas',
                         'Horas Ausentes',
-                        'Razón de Ausencias',
+                        'Razon de Ausencias',
                         'Comentarios',
                     ], ';');
 
